@@ -1,0 +1,1795 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Умный сад</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#f4f7f1;--card:#ffffff;--ink:#1c2a1f;--muted:#66736a;--line:#e1e8dd;
+  --accent:#2f8f4e;--accent-ink:#ffffff;--accent-soft:#e3f3e7;
+  --warn:#8a5a0b;--warn-soft:#fdf1d6;
+  --shadow:0 1px 2px rgba(20,40,25,.06),0 6px 20px rgba(20,40,25,.07);
+}
+:root[data-theme="dark"]{
+  --bg:#121a14;--card:#1b261e;--ink:#eaf2ec;--muted:#93a498;--line:#2a3a2f;
+  --accent:#4cc275;--accent-ink:#0c1a11;--accent-soft:#1f3a29;
+  --warn:#e8c070;--warn-soft:#3a3220;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:16px;line-height:1.45}
+#app{max-width:560px;margin:0 auto;padding:16px 16px calc(112px + env(safe-area-inset-bottom))}
+h1{font-size:28px;line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:22px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+h3{font-size:17px;margin:20px 0 8px}
+p{margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 18px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+.progress{display:flex;gap:6px;margin:2px 0 6px}
+.progress i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.progress i.on{background:var(--accent)}
+.stepno{font-size:13px;color:var(--muted);margin-bottom:14px}
+
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:5;
+  padding:14px 16px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,var(--bg) 72%,transparent)}
+.bar .btn{display:block;width:100%;max-width:528px;margin:0 auto}
+.btn{border:0;border-radius:14px;padding:15px 18px;font-weight:600;font-size:16px;font-family:inherit;
+  background:var(--accent);color:var(--accent-ink);cursor:pointer;text-align:center}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btns{display:grid;gap:10px;margin-top:20px}
+
+.hero-intro{background:linear-gradient(135deg,#2f8f4e,#7bc47f);color:#fff;border-radius:22px;padding:26px 22px;margin-bottom:18px}
+.hero-intro .big{font-size:54px;line-height:1;margin-bottom:10px}
+.hero-intro h1{color:#fff}
+.hero-intro p{color:rgba(255,255,255,.92);margin:0}
+.flow{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.flow li{display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+.flow .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  font-weight:700;display:grid;place-items:center;font-size:14px}
+.flow b{display:block}
+.flow span{color:var(--muted);font-size:14px}
+
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:14px;align-items:center;width:100%;padding:14px;border:2px solid transparent;border-radius:16px;
+  background:var(--card);box-shadow:var(--shadow);cursor:pointer;text-align:left;color:inherit;font:inherit}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt .ic{font-size:30px;flex:none;width:40px;text-align:center}
+.opt b{display:block;font-size:17px}
+.opt span{color:var(--muted);font-size:14px}
+
+.search{width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);
+  color:var(--ink);font:inherit;margin-bottom:10px}
+.city{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:13px 14px;margin-bottom:8px;
+  border:2px solid transparent;border-radius:14px;background:var(--card);color:inherit;font:inherit;cursor:pointer;text-align:left}
+.city small{color:var(--muted)}
+.city.sel{border-color:var(--accent);background:var(--accent-soft)}
+.climates{display:grid;gap:8px;margin:0 0 10px 12px}
+.info{background:var(--accent-soft);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+.info b{font-size:16px}
+
+.areabox{display:flex;gap:10px}
+.areabox input,.areabox select{padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:20px}
+.areabox input{flex:1;min-width:0;font-weight:600}
+.areabox select{font-size:16px}
+.hint{margin:10px 2px 14px;color:var(--muted);font-size:14px;min-height:21px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:9px 14px;font:inherit;font-size:15px;cursor:pointer}
+
+.work{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:12px}
+.work li{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:14px;padding:14px;box-shadow:var(--shadow);opacity:.45;transition:opacity .3s}
+.work li.act,.work li.done{opacity:1}
+.work .dot{flex:none;width:22px;height:22px;border-radius:50%;border:3px solid var(--line)}
+.work li.act .dot{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+.work li.done .dot{border-color:var(--accent);background:var(--accent);animation:none;position:relative}
+.work li.done .dot::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid var(--accent-ink);border-width:0 2px 2px 0;transform:rotate(45deg)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.summary{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+.tag{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--muted)}
+.hero{display:block;width:100%;text-align:left;border:0;color:inherit;font:inherit;cursor:pointer;
+  background:var(--card);border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:12px;
+  outline:2px solid var(--accent)}
+.badge{display:inline-block;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;margin-bottom:12px}
+.row{display:flex;gap:14px;align-items:center}
+.row .big{font-size:46px;line-height:1}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.stats div{background:var(--bg);border-radius:12px;padding:9px 8px}
+.stats b{display:block;font-size:15px;line-height:1.2}
+.stats span{font-size:12px;color:var(--muted)}
+.warnline{margin-top:10px;background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:13px}
+.more{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;color:inherit;font:inherit;cursor:pointer;
+  background:var(--card);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
+.more .em{font-size:30px}
+.more .grow{flex:1;min-width:0}
+.more b{display:block}
+.more span.s{color:var(--muted);font-size:13px;display:block}
+.pct{font-weight:700;color:var(--accent)}
+
+.back{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;padding:4px 0 12px;cursor:pointer}
+.dhead{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.dhead .big{font-size:54px;line-height:1}
+.why{background:var(--accent-soft);border-radius:16px;padding:12px 14px;margin:14px 0}
+.why ul{margin:6px 0 0;padding-left:18px}
+.why li{margin-bottom:3px}
+.tabs{display:flex;gap:4px;background:var(--line);padding:4px;border-radius:14px;margin:14px 0}
+.tabs button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:9px 2px;border-radius:10px;cursor:pointer}
+.tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.panel{background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.panel ul.plain{margin:0;padding-left:18px}
+.panel ul.plain li{margin-bottom:8px}
+.eq{list-style:none;margin:0;padding:0}
+.eq li{padding:10px 0;border-bottom:1px solid var(--line)}
+.eq li:last-child{border:0}
+.eq b{display:block}
+.eq span{color:var(--muted);font-size:14px}
+.st{list-style:none;margin:0;padding:0;counter-reset:s}
+.st li{position:relative;padding:0 0 16px 40px}
+.st li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;
+  background:var(--accent);color:var(--accent-ink);font-weight:700;display:grid;place-items:center;font-size:14px}
+.st b{display:block;margin-bottom:2px}
+.st span{color:var(--muted)}
+.tip{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:6px}
+table.t{width:100%;border-collapse:collapse}
+table.t td{padding:9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+table.t td:last-child{text-align:right;font-weight:600;padding-left:12px}
+table.t tr:last-child td{border:0}
+table.t tr.total td{font-size:17px;color:var(--accent)}
+.foot{margin-top:16px;font-size:12px;color:var(--muted)}
+
+/* ===== v2: категории, карточка, платный план ===== */
+.c-greens{--g1:#2f8f4e;--g2:#8fd18a}
+.c-veg{--g1:#d9622b;--g2:#f2b45a}
+.c-decor{--g1:#b64a8f;--g2:#f0a3c8}
+.c-trees{--g1:#2a7a74;--g2:#86c9a2}
+.grad{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff}
+.ico{flex:none;vertical-align:middle}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.catrow{display:flex;gap:8px;overflow-x:auto;margin:6px -16px 14px;padding:2px 16px 6px;scrollbar-width:none}
+.catrow::-webkit-scrollbar{display:none}
+.catrow .chip{flex:none;white-space:nowrap}
+.listhead{display:flex;justify-content:space-between;align-items:baseline;margin:20px 0 4px}
+.listhead h3{margin:0}
+.thumb{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:26px}
+
+/* верхняя карточка результата */
+.top{display:block;width:100%;text-align:left;border:0;font:inherit;cursor:pointer;border-radius:24px;padding:18px;margin-bottom:6px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden}
+.top .badge{background:rgba(255,255,255,.22);color:#fff;margin-bottom:14px}
+.top .lockpill{position:absolute;right:14px;top:14px;display:flex;gap:5px;align-items:center;font-size:12px;font-weight:600;
+  background:rgba(0,0,0,.2);border-radius:999px;padding:4px 10px}
+.top .row .big{font-size:52px}
+.top h2{color:#fff}
+.top .muted{color:rgba(255,255,255,.88)}
+.top .stats div{background:rgba(255,255,255,.2)}
+.top .stats b{color:#fff}
+.top .stats span{color:rgba(255,255,255,.85)}
+.top .warnline{background:rgba(255,255,255,.92);color:#7a4a05}
+
+/* карточка растения */
+.dhero{position:relative;border-radius:24px;overflow:hidden;padding:20px 18px;margin-bottom:12px;min-height:150px;display:flex;
+  gap:16px;align-items:center;box-shadow:var(--shadow)}
+.dhero .dem{font-size:64px;line-height:1;flex:none}
+.dhero .dphoto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.dhero .dbody{position:relative}
+.dhero h2{color:#fff;font-size:26px;margin:2px 0 4px}
+.dhero p{margin:0;color:rgba(255,255,255,.92);font-size:15px}
+.dcat{display:inline-block;font-size:12px;font-weight:600;background:rgba(255,255,255,.22);border-radius:999px;padding:3px 10px}
+.card{background:var(--card);border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
+.card h3{margin:0 0 8px}
+.card ul{margin:0;padding-left:18px}
+.card li{margin-bottom:5px}
+.freebadge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);
+  background:var(--accent-soft);border-radius:6px;padding:2px 7px;margin-bottom:8px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.nums div{background:var(--bg);border-radius:12px;padding:10px 8px}
+.nums b{display:block;font-size:16px;line-height:1.2}
+.nums span{font-size:12px;color:var(--muted)}
+.planhead{display:flex;justify-content:space-between;align-items:center;margin:24px 0 4px}
+.planhead h2{margin:0;font-size:21px}
+.pill{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:700;border-radius:999px;padding:5px 11px;
+  background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--accent-soft);color:var(--accent)}
+.grp{margin:18px 2px 8px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.lockrow,details.sec>summary{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;font:inherit;color:inherit;
+  background:var(--card);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);cursor:pointer;list-style:none}
+details.sec>summary::-webkit-details-marker{display:none}
+.lockrow{margin-bottom:8px}
+.lre{flex:none;width:38px;height:38px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;font-size:20px}
+.lockrow .lre{filter:grayscale(.6);opacity:.8}
+.lrt{flex:1;min-width:0}
+.lrt b{display:block;font-size:15px;line-height:1.25}
+.lrt i{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:2px}
+.lockrow>.ico{color:var(--warn)}
+details.sec{margin-bottom:8px}
+details.sec>summary .ico{color:var(--muted);transition:transform .2s}
+details.sec[open]>summary .ico{transform:rotate(180deg)}
+details.sec[open]>summary{border-radius:16px 16px 0 0;box-shadow:none}
+.secbody{background:var(--card);border-radius:0 0 16px 16px;padding:4px 16px 16px;box-shadow:var(--shadow)}
+.secbody h4{margin:16px 0 6px;font-size:15px}
+.secbody p{margin:8px 0}
+.secbody ul.plain{margin:6px 0 0;padding-left:18px}
+.secbody ul.plain li{margin-bottom:6px}
+.promo{border-radius:20px;padding:18px;margin:18px 0 8px;background:linear-gradient(135deg,var(--accent-soft),var(--card));
+  border:1px solid var(--line)}
+.promo h3{margin:0 0 6px}
+.promo p{margin:0 0 12px;color:var(--muted);font-size:14px}
+.lnks{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.lnk{border:1px solid var(--line);background:var(--bg);color:var(--accent);font:inherit;font-size:14px;font-weight:600;border-radius:12px;padding:9px 12px;cursor:pointer}
+.src{display:flex;gap:8px;background:var(--accent-soft);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
+.cal{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.cal div{border-radius:10px;padding:8px 4px;text-align:center;font-size:12px;line-height:1.25}
+.cal b{display:block;font-size:13px}
+.m-S{background:#fde7a8;color:#6b4a00}
+.m-G{background:#d9ecd8;color:#24562c}
+.m-H{background:#f6c3a8;color:#7a2d08}
+.m-C{background:#cfe4f5;color:#174a73}
+.m--{background:var(--bg);color:var(--muted)}
+:root[data-theme="dark"] .m-S{background:#5a4812;color:#ffe9a8}
+:root[data-theme="dark"] .m-G{background:#24402a;color:#bfe6c0}
+:root[data-theme="dark"] .m-H{background:#5c2e1a;color:#ffd0b8}
+:root[data-theme="dark"] .m-C{background:#1d3a52;color:#bfe0f7}
+.legend{display:flex;flex-wrap:wrap;gap:6px;font-size:12px}
+.legend span{border-radius:8px;padding:3px 8px}
+.ch{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.ch.fit{border-color:var(--accent);background:var(--accent-soft)}
+.ch .h{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.ch .h b{flex:1}
+.ch .tg{font-size:11px;font-weight:700;color:var(--accent);background:var(--card);border-radius:999px;padding:2px 8px}
+.ch p{margin:4px 0;font-size:14px}
+.ch .k{color:var(--muted)}
+.scen{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.scen>div{background:var(--bg);border-radius:12px;padding:10px 8px;font-size:12px}
+.scen>div.base{outline:2px solid var(--accent)}
+.scen h5{margin:0 0 6px;font-size:12px;color:var(--muted)}
+.scen b{display:block;font-size:14px;line-height:1.2;margin-bottom:6px}
+.tpl{background:var(--bg);border-radius:12px;padding:12px;font-size:14px;white-space:pre-wrap;margin:8px 0}
+.svc{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.svc:last-child{border:0}
+.svc .grow{flex:1;min-width:0}
+.svc b{display:block;font-size:15px}
+.svc span{font-size:13px;color:var(--muted)}
+.btn.small{padding:9px 14px;font-size:14px;border-radius:12px}
+.textlink{border:0;background:none;color:var(--muted);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:12px 0}
+
+/* окно оплаты */
+.shback{position:fixed;inset:0;background:rgba(10,20,12,.5);z-index:20;animation:fade .2s}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:560px;margin:0 auto;background:var(--bg);
+  border-radius:24px 24px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;animation:up .25s}
+.sheet .handle{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+.sheet h2{margin:0 0 4px}
+.sheet .sub{margin:0 0 14px}
+.inc{display:grid;gap:8px;margin-bottom:14px}
+.inc div{display:flex;gap:10px;background:var(--card);border-radius:12px;padding:10px 12px;font-size:14px}
+.inc b{display:block;font-size:14px}
+.inc span{color:var(--muted);font-size:13px}
+.plans{display:grid;gap:8px;margin-bottom:12px}
+.plan{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;text-align:left;font:inherit;color:inherit;
+  background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer}
+.plan.sel{border-color:var(--accent);background:var(--accent-soft)}
+.plan b{display:block}
+.plan span.s{font-size:13px;color:var(--muted)}
+.plan .pr{font-size:18px;font-weight:700;white-space:nowrap}
+.plan .tg{display:inline-block;font-size:11px;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 8px;margin-left:6px}
+.sheet .note{font-size:12px;color:var(--muted);margin:10px 0 0;text-align:center}
+.sheet .btn{width:100%}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  background:#1c2a1f;color:#fff;border-radius:12px;padding:11px 16px;font-size:14px;z-index:30;transition:all .25s;max-width:86vw;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<noscript>Для работы приложения нужен JavaScript.</noscript>
+<script>
+'use strict';
+
+/* ================= Telegram ================= */
+var tg = (window.Telegram && window.Telegram.WebApp) || null;
+
+/* ================= Данные ================= */
+// days — безморозный период (дней), winter — средняя температура января (°C), ориентировочно
+var CITIES = [
+  {id:'msk',name:'Москва',days:150,winter:-8},
+  {id:'spb',name:'Санкт-Петербург',days:140,winter:-7},
+  {id:'nn',name:'Нижний Новгород',days:145,winter:-10},
+  {id:'kzn',name:'Казань',days:150,winter:-11},
+  {id:'sam',name:'Самара',days:160,winter:-11},
+  {id:'srt',name:'Саратов',days:170,winter:-9},
+  {id:'vlg',name:'Волгоград',days:185,winter:-7},
+  {id:'ast',name:'Астрахань',days:200,winter:-5},
+  {id:'rnd',name:'Ростов-на-Дону',days:195,winter:-3},
+  {id:'krd',name:'Краснодар',days:215,winter:-1},
+  {id:'sch',name:'Сочи',days:270,winter:6},
+  {id:'sim',name:'Симферополь',days:230,winter:0},
+  {id:'vrn',name:'Воронеж',days:165,winter:-8},
+  {id:'kgd',name:'Калининград',days:175,winter:-1},
+  {id:'prm',name:'Пермь',days:125,winter:-13},
+  {id:'ufa',name:'Уфа',days:140,winter:-12},
+  {id:'ekb',name:'Екатеринбург',days:125,winter:-13},
+  {id:'chl',name:'Челябинск',days:130,winter:-13},
+  {id:'oms',name:'Омск',days:120,winter:-16},
+  {id:'nsk',name:'Новосибирск',days:120,winter:-16},
+  {id:'krs',name:'Красноярск',days:115,winter:-15},
+  {id:'irk',name:'Иркутск',days:110,winter:-16},
+  {id:'hab',name:'Хабаровск',days:140,winter:-19},
+  {id:'vdk',name:'Владивосток',days:160,winter:-12},
+  {id:'yak',name:'Якутск',days:85,winter:-38},
+  {id:'mur',name:'Мурманск',days:95,winter:-10}
+];
+var CLIMATES = [
+  {id:'cold',name:'Холодный',days:100,winter:-28,desc:'Короткое лето, зимы от −25 °C'},
+  {id:'mid',name:'Умеренный',days:150,winter:-10,desc:'Тёплое лето, морозная зима'},
+  {id:'warm',name:'Тёплый',days:210,winter:0,desc:'Долгое лето, мягкая зима'}
+];
+var SPACES = [
+  {id:'balcony',emoji:'🪟',name:'Балкон / лоджия',desc:'Мало места, много света'},
+  {id:'apartment',emoji:'🏠',name:'Квартира',desc:'Подоконники, стеллажи, кладовка'},
+  {id:'greenhouse',emoji:'🏡',name:'Теплица',desc:'Защищённый грунт, длинный сезон'},
+  {id:'plot',emoji:'🌾',name:'Участок',desc:'Открытый грунт: дача, огород, поле'}
+];
+var GOALS = [
+  {id:'self',emoji:'🥗',name:'Для себя',desc:'Свежий урожай для семьи'},
+  {id:'profit',emoji:'💰',name:'Для заработка',desc:'Доход, окупаемость, масштаб'}
+];
+var AREA_CHIPS = {
+  balcony:[1,2,3,5,8],
+  apartment:[1,2,4,8,15],
+  greenhouse:[6,12,24,50,100,500],
+  plot:[300,600,1000,5000,10000,30000,50000]
+};
+var DIFF = ['','Легко','Средне','Сложно'];
+
+/* Культуры. capex — ₽/м², yield — кг/м² в год, price — ₽/кг, opex — доля расходов от выручки.
+   Все цифры ориентировочные. */
+var PLANTS = [
+{id:'micro',emoji:'🌱',name:'Микрозелень',tag:'Урожай через 7–14 дней и почти не нужно места',
+ spaces:['balcony','apartment','greenhouse'],indoor:true,needDays:0,minArea:0.2,maxArea:30,
+ self:.8,profit:.85,diff:1,capex:18000,yield:60,price:1200,opex:.45,delay:0,
+ time:'Первый урожай через 7–14 дней',
+ use:['Салаты, бутерброды, смузи — свежая витаминная добавка круглый год',
+      'Продажа ресторанам, кафе, магазинам здорового питания и частным клиентам',
+      'Подходит для любого помещения: нужны только свет и вода'],
+ equip:[['Стеллаж на 3–5 полок','растёт вверх — экономит площадь'],
+        ['Лотки 20×30 см','с дренажными отверстиями и поддоны без отверстий'],
+        ['LED-лампы полного спектра','свет 12–16 часов в сутки'],
+        ['Субстрат','кокосовый, льняной или джутовый мат'],
+        ['Семена для микрозелени','подсолнечник, горох, редис, кресс-салат, брокколи'],
+        ['Пульверизатор и небольшой вентилятор','влага и движение воздуха против плесени']],
+ steps:[['Подготовьте семена','Крупные семена (горох, подсолнечник) замочите на 6–8 часов, мелкие (редис, кресс) можно не замачивать.'],
+        ['Посейте','Уложите влажный субстрат слоем 1–2 см, плотно рассыпьте семена и слегка прижмите.'],
+        ['Затемните','Накройте лоток другим лотком на 2–3 дня, опрыскивайте 1–2 раза в день.'],
+        ['Дайте свет','Когда семена проклюнутся, уберите крышку и поставьте лоток под лампу. Поливайте снизу, держите +18…22 °C.'],
+        ['Срежьте урожай','На 7–14 день, когда раскрылись семядоли, срежьте у основания. В холодильнике хранится 5–7 дней.']],
+ tip:'Главная беда — плесень. Не переливайте, не сеяйте слишком густо и обеспечьте лёгкий поток воздуха.',
+ risk:'Главный риск — сбыт. Найдите 3–5 постоянных покупателей до расширения.'},
+
+{id:'herbs',emoji:'🌿',name:'Домашняя зелень',tag:'Базилик, петрушка, укроп, мята — всегда под рукой',
+ spaces:['balcony','apartment','greenhouse'],indoor:true,needDays:0,minArea:0.3,maxArea:20,
+ self:.95,profit:.35,diff:1,capex:4000,yield:12,price:600,opex:.35,delay:0,
+ time:'Первая срезка через 3–6 недель',
+ use:['Свежая зелень для кухни круглый год','Дешевле и вкуснее, чем покупать зимой',
+      'Небольшие продажи горшечной зелени соседям и в офисы'],
+ equip:[['Горшки или ящики','глубина 15–20 см, обязательно с дренажом'],
+        ['Универсальный грунт с перлитом','лёгкий и воздухопроницаемый'],
+        ['Фитолампа','зимой или при северных окнах'],
+        ['Семена или готовая рассада','базилик, петрушка, укроп, мята, кинза'],
+        ['Лейка с узким носиком','поливать у корня']],
+ steps:[['Подберите культуры','Базилик и мята любят тепло и свет, петрушка и укроп — прохладу. Сейте их в разные ящики.'],
+        ['Посейте','Семена на глубину 0,5–1 см. Базилик сеют при +20…25 °C, укроп и петрушку лучше замочить на сутки.'],
+        ['Обеспечьте свет','Нужно 6–8 часов света: южное или западное окно, либо лампа 10–12 часов.'],
+        ['Поливайте умеренно','Когда верхний слой подсох. Лишняя вода вредит больше, чем нехватка.'],
+        ['Срезайте правильно','Срезайте верхушки, оставляя 2 пары листьев — куст будет ветвиться. У базилика убирайте бутоны.']],
+ tip:'Сейте зелень каждые 2–3 недели — урожай будет непрерывным.',
+ risk:'Как бизнес даёт скромный доход: хорошо работает как дополнение к другим культурам.'},
+
+{id:'hydro',emoji:'🥬',name:'Салат на гидропонике',tag:'Свежая листовая зелень без почвы, всю зиму',
+ spaces:['apartment','greenhouse'],indoor:true,needDays:0,minArea:2,maxArea:300,
+ self:.7,profit:.75,diff:2,capex:25000,yield:45,price:450,opex:.4,delay:0,
+ time:'Урожай через 4–6 недель после посева',
+ use:['Свежий салат даже зимой','Поставки в кафе, рестораны и магазины','Легко масштабируется стеллажами вверх'],
+ equip:[['Гидропонная установка','трубы NFT или ванны DWC'],
+        ['Насос и таймер','подача раствора по расписанию'],
+        ['Питательный раствор для зелени','двухкомпонентный, A+B'],
+        ['Фитолампы','полный спектр, 14–16 часов в сутки'],
+        ['pH-метр и EC-метр','контроль раствора'],
+        ['Кубики из минваты или кокоса','для рассады']],
+ steps:[['Вырастите рассаду','Семена в кубиках из минваты, влажно, +20…22 °C. Через 10–14 дней появятся 2 настоящих листа.'],
+        ['Приготовьте раствор','Доведите EC до 1,2–1,6 и pH до 5,8–6,3.'],
+        ['Высадите','Поместите кубики в отверстия труб или плотиков.'],
+        ['Контролируйте','Проверяйте pH и EC каждые 2–3 дня, меняйте раствор раз в 2 недели, температура воды +18…22 °C.'],
+        ['Собирайте','Через 4–6 недель после посева: срезайте целиком или по листьям.']],
+ tip:'Перед запуском установки проверьте, что насос и таймер работают без перерывов: корни не должны сохнуть.',
+ risk:'Зависит от электричества и сбыта. Начните с малой установки и 1–2 постоянных покупателей.'},
+
+{id:'oyster',emoji:'🍄',name:'Вешенка',tag:'Грибы без солнца: кладовка, подвал, гараж',
+ spaces:['apartment','greenhouse','plot'],indoor:true,needDays:0,minArea:3,maxArea:150,
+ self:.7,profit:.8,diff:2,capex:6000,yield:70,price:380,opex:.45,delay:0,
+ time:'Первые грибы через 4–6 недель',
+ spaceNotes:{apartment:'Нужна кладовка, подвал или отдельная нежилая комната',plot:'Понадобится подвал, сарай или утеплённое помещение',greenhouse:'Потребуется затенение от прямого света'},
+ use:['Свежие грибы для семьи — жарить, тушить, мариновать','Продажа: на грибы стабильный спрос','Можно сушить и замораживать'],
+ equip:[['Субстрат','солома или лузга подсолнечника'],
+        ['Мицелий вешенки','зерновой, 5–7% от веса субстрата'],
+        ['Мешки или блоки','плотные пакеты с отверстиями'],
+        ['Стеллажи','несколько ярусов'],
+        ['Увлажнитель воздуха и гигрометр','влажность 85–95%'],
+        ['Вытяжной вентилятор','свежий воздух обязателен'],
+        ['Ёмкость для пастеризации','горячая вода 65–80 °C']],
+ steps:[['Подготовьте субстрат','Измельчите солому или лузгу, пастеризуйте горячей водой (65–80 °C) 1–2 часа, отожмите и остудите до +25 °C.'],
+        ['Заселите мицелий','Перемешайте с мицелием, плотно упакуйте в мешки, сделайте отверстия.'],
+        ['Дайте прорасти','2–3 недели при +20…25 °C в темноте, пока мешок не побелеет.'],
+        ['Перенесите на плодоношение','Прохлада +12…18 °C, влажность 85–95%, свежий воздух и рассеянный свет.'],
+        ['Собирайте урожай','Через 5–10 дней, пока шляпки не загнулись вверх. Будет 2–3 волны плодоношения.']],
+ tip:'Споры вешенки могут вызывать аллергию: не держите грибы в жилой комнате и надевайте маску при сборе.',
+ risk:'Нужна чистота и контроль влажности. Свежие грибы быстро портятся — заранее продумайте продажу.'},
+
+{id:'straw',emoji:'🍓',name:'Клубника ремонтантная',tag:'Свежая ягода с июня до заморозков',
+ spaces:['balcony','greenhouse','plot'],indoor:false,needDays:110,minArea:1,maxArea:20000,
+ self:.9,profit:.7,diff:2,capex:1500,yield:3.5,price:600,opex:.4,delay:0,
+ time:'Первая ягода через 2–3 месяца после посадки',
+ use:['Свежая ягода, заморозка, варенье','Продажа ягоды в сезон — на неё всегда есть спрос','Рассада с усов на продажу'],
+ equip:[['Ремонтантные сорта','например Альбион, Сан Андреас'],
+        ['Рассада фриго или кассетная','готовая к посадке'],
+        ['Агроплёнка, агроволокно или солома','мульча от сорняков и гнили'],
+        ['Капельный полив','вода под корень, не на ягоды'],
+        ['Вертикальные модули или кашпо','для балкона'],
+        ['Удобрение для земляники','комплексное и калийное']],
+ steps:[['Выберите место','Солнечное, без застоя воды, почва рыхлая, pH 5,5–6,5. Расстояние между кустами 30–40 см.'],
+        ['Посадите','Весной (апрель–май) или в конце лета. Сердечко (точку роста) оставьте на уровне почвы.'],
+        ['Замульчируйте и поливайте','Плёнка или солома, капельный полив под корень.'],
+        ['Подкармливайте','Раз в 2–3 недели комплексным удобрением, при цветении — калием.'],
+        ['Собирайте и готовьте к зиме','Собирайте утром каждые 2–3 дня. Осенью обрежьте старые листья и укройте агроволокном.']],
+ tip:'Убирайте первые цветоносы в первый месяц после посадки — куст укоренится и даст больше ягод.',
+ risk:'Ягода быстро портится: сбыт нужно организовать заранее (рынок, ярмарки, соцсети).'},
+
+{id:'tomato',emoji:'🍅',name:'Томаты черри',tag:'Низкорослые сорта — самые «отдающие»',
+ spaces:['balcony','greenhouse','plot'],indoor:false,needDays:140,minArea:0.5,maxArea:20000,
+ self:.95,profit:.6,diff:2,capex:700,yield:12,price:250,opex:.45,delay:0,
+ time:'Первые плоды через 3–4 месяца после посева',
+ use:['Свежие салаты, соусы, заготовки','Продажа сезонных помидоров (черри — дороже)','Рассада на продажу весной'],
+ equip:[['Семена: черри или детерминантные сорта','компактные и урожайные'],
+        ['Стаканчики/кассеты и лампа','для рассады'],
+        ['Колышки или шпалера','подвязка'],
+        ['Капельный полив','ровная влажность'],
+        ['Удобрения для томатов','больше калия'],
+        ['Для теплицы: проветривание','форточки, укрывной материал']],
+ steps:[['Вырастите рассаду','Посев за 55–65 дней до высадки (февраль–март), прорастание при +24…26 °C. Пикировка в фазе 2 листьев.'],
+        ['Закалите','За 1–2 недели выносите рассаду на воздух. Высаживайте при почве выше +12 °C и без заморозков.'],
+        ['Посадите','Расстояние 40–60 см, подвяжите к опоре.'],
+        ['Сформируйте куст','Высокие сорта — 1–2 стебля с удалением пасынков, детерминантные — почти без формирования.'],
+        ['Поливайте и собирайте','Редко, но обильно, под корень. При завязи — подкормка калием. Собирайте по мере покраснения.']],
+ tip:'Резкие перепады полива ведут к растрескиванию плодов: поливайте равномерно.',
+ risk:'Урожай зависит от погоды и болезней (фитофтора). В теплице риск ниже.'},
+
+{id:'cucumber',emoji:'🥒',name:'Огурцы',tag:'Быстрый урожай: плоды через 40–50 дней после всходов',
+ spaces:['balcony','greenhouse','plot'],indoor:false,needDays:100,minArea:1,maxArea:20000,
+ self:.85,profit:.5,diff:1,capex:600,yield:12,price:150,opex:.45,delay:0,
+ time:'Плоды через 40–50 дней после всходов',
+ use:['Свежие, солёные и маринованные огурцы','Ранний урожай хорошо продаётся','Подходит новичкам'],
+ equip:[['Семена','партенокарпические гибриды для теплицы, пчелоопыляемые для открытого грунта'],
+        ['Шпалера или сетка','вертикальное выращивание'],
+        ['Капельный полив или лейка','тёплая вода'],
+        ['Мульча','удерживает влагу'],
+        ['Подкормки','азот и калий'],
+        ['Укрывной материал','от ночных заморозков']],
+ steps:[['Подберите сроки','Сеять в тёплую почву (+15…18 °C): в открытый грунт — после заморозков, в теплицу — раньше.'],
+        ['Посейте','Семена на 2–3 см, по 2–3 в лунку, расстояние 30–40 см.'],
+        ['Поставьте опору','Шпалера экономит место и снижает болезни.'],
+        ['Поливайте','Регулярно, тёплой водой (+20…25 °C), под корень. Перепады дают горечь.'],
+        ['Собирайте часто','Каждые 1–2 дня, зеленцы 8–12 см — так плодоношение дольше.']],
+ tip:'Не давайте плетям пересыхать и не поливайте холодной водой.',
+ risk:'Низкая цена за кг: прибыль зависит от объёма и раннего урожая.'},
+
+{id:'chili',emoji:'🌶️',name:'Острый перец чили',tag:'Для себя, для соусов и для красоты',
+ spaces:['balcony','apartment','greenhouse'],indoor:true,needDays:0,minArea:0.3,maxArea:200,
+ self:.8,profit:.3,diff:2,capex:2500,yield:3,price:900,opex:.4,delay:0,
+ time:'Первые плоды через 3–4 месяца после посева',
+ use:['Свежий и сушёный перец, острые соусы, аджика','Красивые кустики на подоконнике','Соусы и наборы на продажу'],
+ equip:[['Горшки 3–5 л','на каждый куст, с дренажем'],
+        ['Лёгкий питательный грунт','рыхлый'],
+        ['Фитолампа и подогрев для всходов','+25…28 °C'],
+        ['Опоры','для плодоносящих веток'],
+        ['Комплексное удобрение','раз в 2 недели']],
+ steps:[['Посейте','За 70–90 дней до высадки (февраль). Всходы 10–20 дней при +25…28 °C, нужен подогрев и свет.'],
+        ['Пикируйте','При 2 настоящих листьях — в отдельные стаканчики.'],
+        ['Пересадите','В горшки 3–5 л при устойчивом тепле или оставьте на подоконнике.'],
+        ['Ухаживайте','Умеренный полив, подкормки раз в 2 недели, прищипните верхушку для ветвления.'],
+        ['Собирайте','По мере созревания. Работайте в перчатках, не трогайте лицо.']],
+ tip:'Чили всходит долго и капризен к холоду. Не поливайте холодной водой.',
+ risk:'Низкий урожай с метра: окупается за счёт переработки (соусы, сушка) и продажи как продукта.'},
+
+{id:'onion',emoji:'🧅',name:'Зелёный лук на перо',tag:'Быстрый оборот и зелень зимой',
+ spaces:['greenhouse','plot'],indoor:false,needDays:45,minArea:5,maxArea:3000,
+ self:.6,profit:.8,diff:1,capex:1500,yield:15,price:250,opex:.4,delay:0,
+ time:'Срезка через 15–25 дней после посадки',
+ use:['Свежая зелень зимой и ранней весной','Продажа оптом в магазины и на рынок','Простая технология'],
+ equip:[['Лук-репка','для выгонки'],
+        ['Ящики или грядки','с лёгким грунтом'],
+        ['Подсветка','зимой'],
+        ['Обогрев теплицы','зимой'],
+        ['Полив','умеренный, без застоя']],
+ steps:[['Подготовьте лук','Отберите репку 3–4 см, срежьте верхушку на 1/3, замочите на 12–24 часа в тёплой воде.'],
+        ['Посадите плотно','«В притык», донцем вниз, заглубив на 1/3.'],
+        ['Держите режим','+18…22 °C, свет 12 часов, умеренный полив.'],
+        ['Срежьте','Через 15–25 дней перо достигнет 25–30 см. Режьте пучками.'],
+        ['Повторите','Освободите ящик и посадите новую партию — до 8–10 оборотов за год в тёплой теплице.']],
+ tip:'Не переувлажняйте: лук легко загнивает.',
+ risk:'Цена сильно зависит от сезона: самая высокая зимой.'},
+
+{id:'garlic',emoji:'🧄',name:'Озимый чеснок',tag:'Простая культура для больших площадей',
+ spaces:['plot'],indoor:false,needDays:80,minArea:3,maxArea:1000000,
+ self:.75,profit:.8,diff:1,capex:150,yield:.8,price:220,opex:.5,delay:0,
+ time:'Посадка осенью, урожай в июле',
+ use:['Свой чеснок на весь год','Оптовая продажа чеснока и посадочного материала','Долго хранится'],
+ equip:[['Посадочный материал','районированные озимые сорта'],
+        ['Культиватор или мотоблок','для площадей от 10 соток'],
+        ['Мульча','солома, перегной'],
+        ['Секатор и ящики','уборка и хранение'],
+        ['Навес для просушки','сухой и проветриваемый']],
+ steps:[['Выберите время','Осенью за 3–4 недели до устойчивых заморозков (обычно конец сентября — октябрь).'],
+        ['Подготовьте грядку и зубки','Рыхлая плодородная почва. Отберите крупные здоровые зубки, обработайте раствором марганцовки.'],
+        ['Посадите','Глубина 5–6 см, между зубками 8–10 см, между рядами 20–25 см. Замульчируйте слоем 5 см.'],
+        ['Ухаживайте весной','Подкормка азотом, рыхление, полив в засуху. Стрелки удаляйте.'],
+        ['Уберите','Когда нижние листья желтеют (июль). Просушите 2–3 недели под навесом.']],
+ tip:'Для хранения нужны сухость и прохлада, влажность разрушает головки.',
+ risk:'Цена сильно колеблется по годам. Продавать лучше оптом и заранее договариваться о сбыте.'},
+
+{id:'potato',emoji:'🥔',name:'Картофель',tag:'Основа запасов и масштабного хозяйства',
+ spaces:['plot'],indoor:false,needDays:110,minArea:50,maxArea:1000000,
+ self:.85,profit:.55,diff:1,capex:80,yield:2,price:35,opex:.65,delay:0,
+ time:'Урожай через 3–4 месяца после посадки',
+ use:['Запасы на зиму','Оптовая продажа: маржа невысокая, нужен объём','Семенной картофель стоит дороже'],
+ equip:[['Семенной картофель','элита или первая репродукция'],
+        ['Мотоблок или трактор','для площадей больше 10 соток'],
+        ['Картофелесажалка и окучник','на больших площадях'],
+        ['Опрыскиватель','фитофтора и колорадский жук'],
+        ['Копалка или вилы','уборка'],
+        ['Хранилище +2…4 °C','погреб или овощехранилище']],
+ steps:[['Проращивание','За 3–4 недели до посадки выложите клубни на свет при +10…15 °C.'],
+        ['Посадите','Когда почва прогрелась до +8…10 °C: глубина 8–10 см, расстояние 30–35 см, междурядья 70 см.'],
+        ['Окучивайте','Два раза: при высоте 15–20 см и через 2–3 недели.'],
+        ['Защищайте','Следите за колорадским жуком и фитофторой, обрабатывайте по необходимости.'],
+        ['Уберите','Через 10–14 дней после засыхания ботвы. Просушите и храните в темноте при +2…4 °C.']],
+ tip:'Чем больше площадь, тем важнее техника: ручная работа на гектаре нереальна.',
+ risk:'Расчёт не включает технику и работников. Низкая маржа: решает объём и умение хранить урожай.'},
+
+{id:'carrot',emoji:'🥕',name:'Морковь и свёкла',tag:'Овощи на хранение всю зиму',
+ spaces:['plot'],indoor:false,needDays:110,minArea:10,maxArea:1000000,
+ self:.85,profit:.55,diff:1,capex:60,yield:3,price:30,opex:.65,delay:0,
+ time:'Урожай через 3–4 месяца после посева',
+ use:['Запасы на всю зиму','Оптовая продажа овощей','Стабильный спрос круглый год'],
+ equip:[['Семена районированных сортов','выбирайте «на хранение»'],
+        ['Сеялка или посевной валик','для больших площадей'],
+        ['Культиватор или мотоблок','рыхление междурядий'],
+        ['Полив','капельный или дождевание'],
+        ['Хранилище 0…+2 °C','влажность около 90%']],
+ steps:[['Подготовьте почву','Рыхлая на 25–30 см, без свежего навоза, без камней.'],
+        ['Посейте','Морковь — апрель–май, свёкла — май, на глубину 1–2 см, междурядья 20–25 см.'],
+        ['Прорядите','Морковь — до 3–4 см, потом до 6–8 см; свёклу — до 8–10 см.'],
+        ['Ухаживайте','Равномерный полив (иначе трескаются), прополка, подкормка калием.'],
+        ['Уберите и сохраните','Морковь — конец сентября, свёкла — до заморозков. Обрежьте ботву, храните в ящиках с песком при 0…+2 °C.']],
+ tip:'Неравномерный полив — главная причина растрескивания корнеплодов.',
+ risk:'Расчёт без техники и работников. Цена низкая, прибыль зависит от объёма и хранения.'},
+
+{id:'rasp',emoji:'🍇',name:'Малина ремонтантная',tag:'Ягода с августа до заморозков',
+ spaces:['plot'],indoor:false,needDays:110,minArea:20,maxArea:100000,
+ self:.8,profit:.8,diff:2,capex:500,yield:1.2,price:450,opex:.45,delay:1,
+ time:'Полный урожай со 2-го года',
+ use:['Свежая ягода, варенье, заморозка','Побеги можно срезать на зиму — укрывать не нужно','Продажа ягоды и саженцев'],
+ equip:[['Саженцы ремонтантных сортов','здоровые, с закрытыми корнями'],
+        ['Шпалера','столбы и проволока на 60 и 120 см'],
+        ['Капельный полив','ягода любит влагу'],
+        ['Мульча','опилки или солома 5–7 см'],
+        ['Секатор','осенняя обрезка'],
+        ['Контейнеры и холод','ягода быстро портится']],
+ steps:[['Посадите','Весной или осенью. Расстояние в ряду 40–50 см, междурядья 2–2,5 м.'],
+        ['Установите шпалеру','Проволока на высоте 60 и 120 см.'],
+        ['Мульчируйте и поливайте','Слой 5–7 см, равномерный полив.'],
+        ['Подкармливайте','Весной азот и перегной, летом калий.'],
+        ['Обрезайте','Осенью после плодоношения срежьте все побеги под корень — весной вырастут новые.']],
+ tip:'Не сажайте слишком густо: плохая вентиляция — это болезни.',
+ risk:'Первый год почти без дохода. Ягоду надо продавать быстро или перерабатывать.'},
+
+{id:'herbs2',emoji:'🌼',name:'Лекарственные травы и чаи',tag:'Мята, мелисса, чабрец, иван-чай',
+ spaces:['balcony','greenhouse','plot'],indoor:false,needDays:90,minArea:0.5,maxArea:50000,
+ self:.8,profit:.6,diff:1,capex:300,yield:.5,price:1500,opex:.4,delay:0,
+ time:'Первая срезка в первый сезон',
+ use:['Свои травяные чаи и сборы','Продажа сушёного сырья и чайных сборов','Многие травы многолетние и неприхотливые'],
+ equip:[['Семена или рассада','мята, мелисса, чабрец, душица'],
+        ['Секатор','срезка'],
+        ['Сушилка или навес','+35…40 °C, с вентиляцией'],
+        ['Стеклянные банки или мешочки','для хранения'],
+        ['Весы и упаковка','для продажи']],
+ steps:[['Выберите культуры','Начните с мяты, мелиссы, чабреца и душицы — неприхотливые многолетники.'],
+        ['Посадите','Рассадой весной, расстояние 30–40 см. Мяту ограничьте барьером.'],
+        ['Ухаживайте','Умеренный полив, прополка, обрезка перед цветением.'],
+        ['Соберите','В сухую погоду после росы, до полного цветения.'],
+        ['Высушите и сохраните','В тени на сквозняке или в сушилке при +35…40 °C. Храните в стекле.']],
+ tip:'Не сушите на солнце — трава теряет аромат и полезные вещества.',
+ risk:'Рынок небольшой: нужна упаковка, бренд и каналы сбыта (маркетплейсы, ярмарки).'},
+
+{id:'pumpkin',emoji:'🎃',name:'Тыква и кабачки',tag:'Урожай при минимуме усилий',
+ spaces:['plot'],indoor:false,needDays:100,minArea:5,maxArea:1000000,
+ self:.85,profit:.45,diff:1,capex:40,yield:4,price:25,opex:.6,delay:0,
+ time:'Кабачки через 6–8 недель, тыква через 3–4 месяца',
+ use:['Кабачки летом, тыква на всю зиму','Блюда, выпечка, семена','Осенняя продажа тыквы'],
+ equip:[['Семена или рассада','районированные сорта'],
+        ['Мульча','удерживает влагу'],
+        ['Капельный полив','по желанию'],
+        ['Подкормки','перегной, комплексное'],
+        ['Место для хранения +10…15 °C','сухо']],
+ steps:[['Выберите место','Солнечное, плодородное, с перегноем.'],
+        ['Посейте','После заморозков в тёплую почву (+12…14 °C), 2–3 семени в лунку, 70×70 см (тыква — 100×100 см).'],
+        ['Ухаживайте','Умеренный полив, подкормки. У тыквы прищипывайте плети, оставляя 2–3 плода.'],
+        ['Соберите','Кабачки при 15–20 см каждые 2–3 дня. Тыкву — при подсыхании плодоножки, до заморозков.'],
+        ['Сохраните','Тыкву просушите и храните при +10…15 °C в сухом месте.']],
+ tip:'Кабачки собирайте молодыми — старые плоды замедляют новые.',
+ risk:'Низкая цена: прибыль только от объёма. Хороша как дополнение к другим культурам.'}
+];
+
+/* ================= v2: настройки, категории, каналы продаж ================= */
+// ВАЖНО: пока оплата не подключена, приложение работает в демо-режиме (demo:true) — доступ открывается без списания денег.
+// Чтобы принимать реальные платежи, нужен бот-сервер: он создаёт счёт и сообщает приложению об оплате (invoiceEndpoint).
+// Доступ в браузере хранится локально и не защищён: проверять оплату нужно на сервере.
+var CONFIG={
+  demo:true,
+  priceOne:'190 ₽',      // доступ к плану одной культуры (цена-заглушка)
+  priceAll:'490 ₽',      // доступ ко всем планам (цена-заглушка)
+  invoiceEndpoint:'',    // адрес вашего сервера, создающего счёт
+  contactUrl:''          // ссылка на вашего менеджера/бота для заявок, например https://t.me/ваш_ник
+};
+var PHOTOS={}; // сюда можно добавить фото: {micro:'photos/micro.jpg', ...}
+
+var CATS=[
+  {id:'greens',emoji:'🌿',short:'Зелень',name:'Микрозелень и зелень'},
+  {id:'veg',emoji:'🥕',short:'Овощи и ягоды',name:'Овощи, ягоды и грибы'},
+  {id:'decor',emoji:'🌸',short:'Декор',name:'Декоративные растения'},
+  {id:'trees',emoji:'🌳',short:'Саженцы',name:'Деревья и кустарники'}
+];
+
+var CHANNELS={
+  shops:{e:'🛒',n:'Магазины и супермаркеты',
+    what:'Стабильные регулярные закупки по договорённости или договору.',
+    how:'Начните с небольших местных магазинов и магазинов здорового питания: найдите закупщика, предложите пробную партию.',
+    need:'Упаковка, этикетка, регулярность поставок, документы на продукцию по требованиям региона.',
+    tip:'Крупные сети платят с отсрочкой и требуют объёмов — сначала отработайте 2–3 небольшие точки.'},
+  horeca:{e:'🍽️',n:'Рестораны и кафе',
+    what:'Ценят свежесть, необычные продукты и стабильность поставок.',
+    how:'Принесите образцы шеф-повару, предложите доставку в день сбора и небольшой минимальный заказ.',
+    need:'Ровное качество, 1–3 поставки в неделю, удобная фасовка.',
+    tip:'Шефы ищут то, чего нет у оптовиков: подчёркивайте свежесть и уникальность.'},
+  markets:{e:'🧺',n:'Фермерские рынки и ярмарки',
+    what:'Быстрые продажи за наличные и обратная связь от покупателей.',
+    how:'Узнайте у организаторов условия аренды места и дни ярмарок в вашем городе.',
+    need:'Прилавок, весы, упаковка, ценники и чистый, аккуратный товар.',
+    tip:'Первые продажи здесь — лучший способ проверить цену и спрос.'},
+  private:{e:'👥',n:'Частные покупатели',
+    what:'Соседи, друзья, чаты дома или района, подписчики в соцсетях.',
+    how:'Расскажите о продукте в местных чатах и соцсетях, предложите «подписку» на регулярную доставку.',
+    need:'Фото, понятная цена, удобная доставка или самовывоз.',
+    tip:'Предзаказ и подписка снимают главный риск — нераспроданные остатки.'},
+  wholesale:{e:'🚚',n:'Оптовые закупщики',
+    what:'Покупают большие партии по сниженной цене.',
+    how:'Ищите перекупщиков и оптовые рынки в вашем регионе, договаривайтесь о цене до начала сезона.',
+    need:'Большие объёмы, сортировка, тара, транспорт.',
+    tip:'Оптовая цена ниже розничной — считайте, что остаётся после затрат.'},
+  online:{e:'📱',n:'Онлайн-площадки',
+    what:'Маркетплейсы, доски объявлений, свой магазин в соцсетях.',
+    how:'Начните с объявлений и страницы в соцсетях, потом подключайте маркетплейсы с доставкой.',
+    need:'Хорошие фото, упаковка для доставки, быстрые ответы покупателям.',
+    tip:'Для скоропортящегося товара подойдёт только доставка по городу.'}
+};
+
+/* ================= v2: дополнительные данные по существующим культурам ================= */
+var EXTRA={
+micro:{cat:'greens',maxArea:10,
+ about:'Микрозелень — молодые проростки (7–14 дней) подсолнечника, гороха, редиса, кресс-салата и других культур. В них много витаминов, а вкус яркий и концентрированный.',
+ seedQ:'семена для микрозелени',seedNote:'Берите семена, предназначенные именно для проращивания: необработанные протравителями и с высокой всхожестью. Для начала достаточно 3–4 видов: горох, подсолнечник, редис, кресс-салат.',
+ eqQ:'стеллаж для микрозелени лотки',
+ diy:['Стеллаж: металлический или деревянный стеллаж на 3–5 полок из строительного магазина — подойдёт и готовый кухонный.','Лотки: пищевые контейнеры 20×30 см; в одном сделайте отверстия для дренажа, второй оставьте целым в качестве поддона.','Свет: покупайте готовые светодиодные фитолинейки с вилкой — электрику из проводов не собирайте.'],
+ mistakes:['Слишком густой посев и избыток воды — главная причина плесени.','Нет движения воздуха: поставьте небольшой вентилятор.','Нет покупателей заранее — зелень живёт всего 5–7 дней.','Семена без проверки всхожести: часть лотков не прорастёт.'],
+ scale:['Добавьте стеллажи и разведите посевы по дням — урожай будет каждый день.','Расширьте ассортимент до 6–8 видов и делайте наборы «ассорти».','Договоритесь о регулярных поставках с 2–3 ресторанами и магазином.'],
+ sell:['horeca','shops','private','online'],sellNote:'Продукт скоропортящийся: договаривайтесь с покупателями до посева, а не после.',
+ cal:'CCCCCCCCCCCC',split:[['Стеллаж и лотки',.35],['Освещение',.35],['Семена и субстрат',.15],['Вентиляция, полив, мелочи',.15]]},
+herbs:{cat:'greens',
+ about:'Домашний огород на подоконнике: базилик, петрушка, укроп, мята, кинза. Растут в горшках и дают свежую зелень круглый год.',
+ seedQ:'семена зелени для подоконника',seedNote:'Для подоконника выбирайте компактные быстрорастущие сорта. Базилик сажайте отдельно от укропа и петрушки: у них разные требования к теплу.',
+ eqQ:'фитолампа для рассады горшки',
+ diy:['Ящики можно сделать из пищевых контейнеров или деревянных ящиков с дренажем.','Полка у окна из обычной доски — больше горшков на одном подоконнике.','Грунт: универсальный грунт с перлитом или вермикулитом (примерно 3:1).'],
+ mistakes:['Лишний полив — корни гниют.','Мало света зимой: растения вытягиваются.','Срезка «под корень» вместо верхушек — куст перестаёт ветвиться.'],
+ scale:['Добавьте второй стеллаж с фитолампой.','Продавайте горшечную зелень соседям и в офисы.','Переходите к микрозелени или гидропонике — выручка с метра выше.'],
+ sell:['private','online','markets'],sellNote:'Хорошо идут подписки «зелень раз в неделю» и горшки в подарок.',
+ cal:'CCCCCCCCCCCC',split:[['Горшки и ящики',.25],['Грунт и семена',.25],['Освещение',.4],['Прочее',.1]]},
+hydro:{cat:'greens',maxArea:100,
+ about:'Выращивание салата и зелени на питательном растворе без почвы — быстрее и чище, чем в грунте.',
+ seedQ:'семена салата для гидропоники',seedNote:'Подходят сорта салата и зелени для гидропоники: батавия, ромен, рукола. Берите проверенные партии с высокой всхожестью.',
+ eqQ:'гидропонная установка NFT',
+ diy:['Простая система DWC: пищевой контейнер 20–50 л с крышкой, пластиковые стаканчики-горшки, аквариумный компрессор с распылителем.','NFT из ПВХ-труб: труба 75–110 мм с отверстиями под стаканчики и небольшим уклоном; насос готовый, погружной.','Насос, лампы и таймер подключайте только заводскими устройствами через розетку с защитой.'],
+ mistakes:['Не следят за pH и EC — растения останавливаются в росте.','Тёплая вода (выше +24 °C) — гниль корней.','Нет плана на случай отключения электричества: корни быстро сохнут.'],
+ scale:['Добавьте ярус и вторую линию с посевом каждую неделю.','Фасуйте в упаковку с вашим названием.','Подключите автоматику: дозаторы pH/EC и таймеры.'],
+ sell:['horeca','shops','online','private'],sellNote:'Продавайте живой салат с корнем в горшочке — он хранится дольше и стоит дороже.',
+ cal:'CCCCCCCCCCCC',split:[['Установка и трубы',.35],['Освещение',.3],['Насос, таймеры, измерители',.2],['Раствор, семена, мелочи',.15]]},
+oyster:{cat:'veg',maxArea:60,
+ about:'Вешенка — одни из самых простых в выращивании грибов: растут на соломе или лузге в тёмном помещении, солнце не нужно.',
+ seedQ:'мицелий вешенки зерновой',seedNote:'Покупайте мицелий у производителя с указанием штамма и даты изготовления; для начала берите штаммы, рекомендуемые начинающим.',
+ eqQ:'увлажнитель воздуха гигрометр',
+ diy:['Стеллаж из дерева или металла в несколько ярусов.','Пастеризатор: бочка 100–200 л и нагреватель с терморегулятором для горячей воды.','Камера плодоношения: утеплённая комната с вытяжкой, увлажнителем и гигрометром.'],
+ mistakes:['Слабая пастеризация субстрата — зелёная плесень.','Мало свежего воздуха — длинные ножки и мелкие шляпки.','Сухой воздух — грибы растрескиваются.'],
+ scale:['Отдельные помещения для инкубации и плодоношения.','Закупайте субстрат (лузгу, солому) оптом.','Добавьте переработку: сушка, заморозка, готовые наборы.'],
+ sell:['markets','shops','horeca','private'],sellNote:'Продавайте свежими в день сбора; излишки сушите и замораживайте.',
+ cal:'CCCCCCCCCCCC',split:[['Помещение и стеллажи',.35],['Увлажнение и вентиляция',.3],['Мицелий и субстрат',.2],['Пастеризация, мешки',.15]]},
+straw:{cat:'veg',
+ about:'Ремонтантная клубника плодоносит несколько раз за сезон — с июня до заморозков. Подходит для грядок, теплиц и вертикальных кашпо.',
+ seedQ:'рассада клубники ремонтантной',seedNote:'Берите рассаду с закрытой корневой системой или фриго у питомника с документами на сорт. Популярны ремонтантные сорта вроде Альбион и Сан Андреас.',
+ eqQ:'капельный полив агроволокно',
+ diy:['Вертикальные грядки из ПВХ-труб или ящиков — экономят место.','Мульча: солома, опилки, агроплёнка.','Капельный полив можно собрать из готового набора со шлангом и таймером.'],
+ mistakes:['Загущённая посадка — серая гниль.','Полив на листья и ягоды.','Первые цветоносы не убраны — слабые кусты.'],
+ scale:['Закладывайте плантацию участками, чтобы урожай шёл волнами.','Продавайте также рассаду с усов.','Организуйте самосбор для покупателей.'],
+ sell:['markets','private','shops','horeca'],sellNote:'Ягода быстро портится: продавайте в день сбора, излишки замораживайте или перерабатывайте.',
+ cal:'---SSHHHHG--',split:[['Рассада',.45],['Полив и мульча',.3],['Опоры, укрытия',.15],['Удобрения, мелочи',.1]]},
+tomato:{cat:'veg',
+ about:'Томаты черри — сладкие мелкие помидоры, которые хорошо растут на балконе, в теплице и на грядке.',
+ seedQ:'семена томатов черри',seedNote:'Выбирайте районированные сорта и гибриды, устойчивые к болезням. Для балкона — карликовые, для теплицы — высокорослые.',
+ eqQ:'шпалера для томатов капельный полив',
+ diy:['Шпалера из столбов и проволоки или бечёвки.','Кассеты для рассады из пластиковых стаканчиков с отверстиями.','Тоннельное укрытие из дуг и агроволокна — защита от заморозков.'],
+ mistakes:['Загущённая посадка и застой воздуха — фитофтора.','Нерегулярный полив — растрескиваются плоды.','Не убирают пасынки у высокорослых сортов.'],
+ scale:['Добавьте теплицу: сезон длиннее на 1–2 месяца.','Используйте капельный полив с подкормкой.','Выращивайте на продажу рассаду весной.'],
+ sell:['markets','private','shops','horeca'],sellNote:'Цветные и необычные черри продаются дороже обычных помидоров.',
+ cal:'-SSGSGHHH---',split:[['Рассада/семена',.2],['Опоры и шпалера',.3],['Полив',.25],['Укрытие, подкормки',.25]]},
+cucumber:{cat:'veg',
+ about:'Огурцы — одна из самых быстрых овощных культур: плоды появляются через 40–50 дней после всходов.',
+ seedQ:'семена огурцов для теплицы',seedNote:'Для теплицы берите партенокарпические гибриды, для открытого грунта — пчелоопыляемые сорта.',
+ eqQ:'сетка для огурцов шпалера',
+ diy:['Шпалера из столбов и сетки или проволоки.','Укрытие из дуг и плёнки или агроволокна.','Мульча из соломы или скошенной травы.'],
+ mistakes:['Холодный полив — болезни корней.','Плети не подвязаны — загущение.','Редкий сбор: растение перестаёт плодоносить.'],
+ scale:['Две волны посева с интервалом 3–4 недели.','Теплица для раннего урожая.','Переработка: маринады, соления.'],
+ sell:['markets','private','wholesale','shops'],sellNote:'Ранний урожай продаётся заметно дороже летнего.',
+ cal:'----SGHHH---',split:[['Семена',.1],['Шпалера, укрытие',.45],['Полив',.3],['Подкормки, мелочи',.15]]},
+chili:{cat:'veg',
+ about:'Острый перец чили — компактный куст с яркими плодами. Подходит для подоконника, балкона и теплицы.',
+ seedQ:'семена острого перца чили',seedNote:'Для дома берите компактные сорта, для продажи — урожайные. Всхожесть у чили не всегда высокая, берите семена с запасом.',
+ eqQ:'фитолампа горшки 5 литров',
+ diy:['Опоры из бамбуковых палок или проволоки.','Подогрев всходов: тёплая подставка (электрический коврик для рассады).','Сушка плодов: гирлянды на нитках в тёплом проветриваемом месте.'],
+ mistakes:['Всходы на холоде — не взойдут.','Переполив и холодная вода.','Работа без перчаток, затем прикосновение к лицу.'],
+ scale:['Продавайте не свежий перец, а соусы и сушёные наборы.','Создайте коллекцию из 5–8 сортов с разной остротой.','Расширьтесь на теплицу.'],
+ sell:['online','private','markets','shops'],sellNote:'Лучше всего идёт готовый продукт: соусы, хлопья, подарочные наборы.',
+ cal:'-SGGSGGHHH--',split:[['Горшки и грунт',.3],['Освещение, подогрев',.4],['Семена',.1],['Опоры, удобрения',.2]]},
+onion:{cat:'greens',
+ about:'Зелёный лук на перо — быстрый оборот: срезка уже через 15–25 дней после посадки репки.',
+ seedQ:'лук-репка для выгонки',seedNote:'Подойдёт лук-репка 3–4 см без повреждений; не берите уже проросший или подгнивший.',
+ eqQ:'ящики для выгонки лука',
+ diy:['Ящики для выгонки из дерева или пластиковых контейнеров.','Простая теплица-тоннель из дуг и плёнки для зимнего обогрева.','Стеллаж для ящиков в несколько ярусов.'],
+ mistakes:['Слишком влажный субстрат — гниль репки.','Низкая температура зимой.','Плотная упаковка — перо быстро желтеет.'],
+ scale:['Поточное производство: посадка партии каждые 5–7 дней.','Продажа оптом в магазины и на рынок.','Механизация: мойка и фасовка.'],
+ sell:['wholesale','shops','markets','horeca'],sellNote:'Продавайте пучками весом 100–200 г — удобно для магазинов.',
+ cal:'CCCC-----CCC',split:[['Ящики и стеллажи',.3],['Подсветка и обогрев',.4],['Посадочный материал',.2],['Прочее',.1]]},
+garlic:{cat:'veg',
+ about:'Озимый чеснок сажают осенью, а убирают в июле. Простая культура, хорошо хранится и подходит для больших площадей.',
+ seedQ:'озимый чеснок посадочный материал',seedNote:'Берите районированные озимые сорта у проверенного питомника; воздушные луковички и мелкие зубки дают слабый урожай.',
+ eqQ:'культиватор мотоблок',
+ diy:['Хранилище: сухое прохладное помещение с вентиляцией.','Сушка: навес или чердак с хорошим продувом.','Для посадки используйте разметку: доска с колышками на нужное расстояние.'],
+ mistakes:['Сажают слишком поздно — зубки не успевают укорениться.','Свежий навоз под посадку — болезни.','Не просушивают: головки плесневеют при хранении.'],
+ scale:['Площадь 10–30 соток требует культиватора и отдельного хранилища.','Сортируйте и калибруйте: крупные головки продаются дороже.','Продавайте также посадочный материал.'],
+ sell:['wholesale','markets','shops','online'],sellNote:'Крупный чеснок и семенной материал дороже; не продавайте в пик массового сбора.',
+ cal:'---GGGH--SG-',split:[['Посадочный материал',.55],['Техника',.2],['Хранение, сушка',.15],['Удобрения',.1]]},
+potato:{cat:'veg',
+ about:'Картофель — основа запасов. Как бизнес работает только на больших площадях, где важны техника и хранение.',
+ seedQ:'семенной картофель элита',seedNote:'Покупайте элиту или первую репродукцию с документами на сорт: это снижает риск болезней и повышает урожай.',
+ eqQ:'мотоблок картофелекопалка',
+ diy:['Окучник — ручной или для мотоблока.','Хранилище: утеплённый погреб с вентиляцией.','Сортировочный стол с лотком для отбраковки.'],
+ mistakes:['Посадка в холодную землю.','Опоздание с обработкой от фитофторы и колорадского жука.','Нет подготовленного хранилища.'],
+ scale:['Механизируйте посадку и уборку.','Договаривайтесь с оптовиками до посадки.','Мойка, сортировка и фасовка повышают цену.'],
+ sell:['wholesale','shops','markets','private'],sellNote:'Осенью цена низкая, весной выше: хранение даёт прибавку.',
+ cal:'---SSGGHH---',split:[['Семенной картофель',.5],['Техника',.3],['Хранилище',.1],['Защита, удобрения',.1]]},
+carrot:{cat:'veg',
+ about:'Морковь и свёкла — корнеплоды, которые отлично хранятся и востребованы круглый год.',
+ seedQ:'семена моркови на хранение',seedNote:'Выбирайте позднеспелые сорта «на хранение», районированные для вашего региона.',
+ eqQ:'сеялка для моркови',
+ diy:['Посевной валик или ёмкость с отверстиями для равномерного высева.','Хранение в ящиках с песком в прохладном подвале.','Сортировочная доска с отверстиями разных размеров.'],
+ mistakes:['Загущённые посевы — мелкие корнеплоды.','Нерегулярный полив — растрескивание.','Хранение в тепле.'],
+ scale:['Купите сеялку и культиватор.','Мойка и фасовка — дополнительная цена.','Оптом продавайте осенью, в розницу — весной.'],
+ sell:['wholesale','shops','markets','private'],sellNote:'Хранение до весны даёт более высокую цену, но нужен подготовленный погреб.',
+ cal:'---SSGGGHH--',split:[['Семена',.25],['Техника',.4],['Полив',.2],['Хранилище',.15]]},
+rasp:{cat:'veg',
+ about:'Ремонтантная малина плодоносит на побегах текущего года — с августа до заморозков. Осенью побеги срезают, укрывать их не нужно.',
+ seedQ:'саженцы малины ремонтантной',seedNote:'Берите саженцы у питомника с документами о сорте и здоровым корнем; популярны ремонтантные сорта с крупной ягодой.',
+ eqQ:'саженцы малины шпалера',
+ diy:['Шпалера из столбов и проволоки на высоте 60 и 120 см.','Мульча из опилок или соломы.','Капельный полив из готового шланга.'],
+ mistakes:['Слишком густая посадка.','Не срезают побеги осенью — болезни.','Мало влаги в период налива ягод.'],
+ scale:['Добавляйте новые ряды каждый год.','Организуйте холодильник для хранения и самосбор.','Продавайте саженцы.'],
+ sell:['markets','private','shops','horeca'],sellNote:'Ягоду собирайте утром и сразу охлаждайте.',
+ cal:'---SGGGHHH--',split:[['Саженцы',.5],['Шпалера',.25],['Полив',.15],['Мульча, подкормки',.1]]},
+herbs2:{cat:'greens',
+ about:'Лекарственные травы и чайные сборы: мята, мелисса, чабрец, душица, иван-чай. Многие из них многолетние и неприхотливые.',
+ seedQ:'семена мяты мелиссы чабреца',seedNote:'Покупайте семена и рассаду у специализированных питомников; для продажи сырья важны чистота сорта и отсутствие примесей.',
+ eqQ:'электросушилка для трав',
+ diy:['Сушилка из деревянной рамы и сетки в тёплом проветриваемом месте без прямого солнца.','Упаковка: стеклянные банки и крафт-пакеты.','Чайные сборы по собственным рецептам.'],
+ mistakes:['Сушка на солнце — теряется аромат.','Сбор в росу или дождь.','Нет упаковки и бренда.'],
+ scale:['Добавьте 3–5 видов растений и составьте сборы.','Продавайте через маркетплейсы и ярмарки.','Проверьте требования к сертификации для продажи трав.'],
+ sell:['online','markets','private','shops'],sellNote:'Продаются бренд, упаковка и рецепты, а не просто трава. Проверьте правила продажи трав и чаёв в вашем регионе.',
+ cal:'---SSHHHH---',split:[['Рассада/семена',.3],['Сушилка',.3],['Упаковка',.25],['Прочее',.15]]},
+pumpkin:{cat:'veg',
+ about:'Тыква и кабачки — неприхотливые культуры с высоким урожаем при минимуме усилий.',
+ seedQ:'семена тыквы и кабачков',seedNote:'Для хранения берите позднеспелые сорта тыквы, для лета — раннеспелые кабачки.',
+ eqQ:'мульчирующая плёнка',
+ diy:['Лунки с перегноем вместо дорогих удобрений.','Мульча из соломы или скошенной травы.','Подставка под плоды для сухости.'],
+ mistakes:['Загущённый посев.','Переполив во время созревания.','Поздний сбор — кабачки грубеют.'],
+ scale:['На больших площадях используйте технику.','Продавайте тыкву осенью, кабачки — летом.','Перерабатывайте: семечки, пюре.'],
+ sell:['wholesale','markets','private','shops'],sellNote:'Тыква продаётся лучше в сезон — осенью, к холодам и праздникам.',
+ cal:'----SGHHH---',split:[['Семена',.2],['Мульча и подкормки',.4],['Полив',.25],['Хранение',.15]]}
+};
+
+/* ================= v2: новые культуры ================= */
+var NEWP=[
+{id:'basil',emoji:'🍃',name:'Базилик на продажу',tag:'Ароматная зелень, которая хорошо продаётся круглый год',cat:'greens',
+ spaces:['balcony','apartment','greenhouse'],indoor:true,needDays:0,minArea:1,maxArea:30,
+ self:.6,profit:.7,diff:2,capex:22000,yield:25,price:900,opex:.4,delay:0,
+ time:'Первая срезка через 5–6 недель',
+ about:'Базилик — пряная зелень с ярким ароматом. Растёт на стеллажах под лампами, продаётся срезанным пучком или живым горшочком.',
+ use:['Свежая зелень для кухни, соусов (песто) и напитков','Продажа живым горшочком или срезанным пучком','Хорошо сочетается с гидропоникой'],
+ equip:[['Стеллаж с фитолампами','свет 14–16 часов'],['Горшочки или гидропонные стаканчики','с дренажем'],['Субстрат или раствор','кокос, торф с перлитом или питательный раствор'],['Семена базилика','зелёные и фиолетовые сорта'],['Подогрев и вентилятор','температура +22…26 °C']],
+ steps:[['Посейте','Семена на поверхность субстрата, слегка присыпьте. Температура +22…26 °C, влажно.'],['Пикируйте','Через 10–14 дней, при 2 настоящих листьях, рассадите в горшочки.'],['Создайте условия','Свет 14–16 часов, тепло +20…26 °C, без сквозняков.'],['Подкармливайте','Раз в 10–14 дней слабым раствором удобрения для зелени.'],['Срезайте','Верхушки при высоте 15–20 см, оставляя 2 пары листьев. Убирайте бутоны.']],
+ tip:'Базилик не любит холод ниже +12 °C и холодный полив. Не ставьте у холодного окна.',
+ risk:'Капризен к холоду и сквознякам, скоропортящийся: продавайте горшочком — так хранится дольше.',
+ seedQ:'семена базилика',seedNote:'Берите проверенные сорта зелёного и фиолетового базилика; для продажи удобны компактные, хорошо ветвящиеся.',
+ eqQ:'фитолампа стеллаж для рассады',
+ diy:['Стеллаж из дерева или металла.','Подставка для горшочков из пищевых лотков.','Тёплая подставка под горшки для раннего посева.'],
+ mistakes:['Холод и сквозняки — чернеют листья.','Не прищипывают бутоны — листья теряют вкус.','Переполив.'],
+ scale:['Второй стеллаж и посев каждую неделю.','Выращивайте разные сорта: зелёный, фиолетовый, лимонный.','Продавайте готовое песто.'],
+ sell:['horeca','shops','private','online'],sellNote:'Ресторанам и магазинам удобнее живые горшочки, чем срезка.',
+ cal:'CCCCCCCCCCCC',split:[['Стеллаж и горшки',.3],['Освещение',.4],['Подогрев, вентиляция',.15],['Семена и субстрат',.15]]},
+
+{id:'pepper',emoji:'🫑',name:'Сладкий перец',tag:'Урожайная культура для теплицы и тёплого лета',cat:'veg',
+ spaces:['balcony','greenhouse','plot'],indoor:false,needDays:130,minArea:1,maxArea:20000,
+ self:.8,profit:.6,diff:2,capex:900,yield:8,price:200,opex:.5,delay:0,
+ time:'Плоды через 3–4 месяца после посева',
+ about:'Сладкий перец — теплолюбивая овощная культура с крупными сочными плодами. Лучше всего растёт в теплице.',
+ use:['Свежий перец для салатов, фарширования, заготовок','Продажа на рынке и в магазины: стабильный спрос','Цветной перец (красный, жёлтый) продаётся дороже зелёного'],
+ equip:[['Семена или рассада','раннеспелые гибриды для вашего региона'],['Фитолампа','для рассады в феврале–марте'],['Опоры или шпалера','подвязка плодоносящих кустов'],['Капельный полив','равномерная влага'],['Удобрения для перца','калий, кальций'],['Укрытие','агроволокно на ночь при холоде']],
+ steps:[['Посейте на рассаду','Февраль–март, за 60–70 дней до высадки. Всходы при +25…28 °C, нужен свет.'],['Пикируйте','В фазе 2 настоящих листьев — в отдельные стаканчики 0,3–0,5 л.'],['Закалите и высадите','Когда минует угроза заморозков и почва прогрелась до +14…16 °C. Расстояние 30–40 см.'],['Ухаживайте','Тёплая вода, равномерный полив, подкормка калием и кальцием, опоры для тяжёлых веток.'],['Собирайте','В технической спелости (зелёный) или биологической (красный/жёлтый) — по спросу.']],
+ tip:'Резкие перепады температуры и холодная вода сбрасывают завязи. В жару выше +32 °C проветривайте и притеняйте.',
+ risk:'Любит тепло: в коротком лете берите раннеспелые гибриды и теплицу.',
+ seedQ:'семена сладкого перца',seedNote:'Для короткого лета выбирайте раннеспелые гибриды с устойчивостью к болезням; для теплицы — крупноплодные.',
+ eqQ:'капельный полив для теплицы',
+ diy:['Опоры и подвязка из бамбуковых палок и шпагата.','Тоннельное укрытие из дуг и агроволокна.','Самодельный капельный полив: ёмкость на возвышении и трубки с капельницами.'],
+ mistakes:['Высадка в холодную землю.','Холодный полив и перепады температуры.','Загущённая посадка — болезни и мелкие плоды.'],
+ scale:['Теплица раскрывает потенциал: сезон длиннее на 1–2 месяца.','Сортируйте по цвету и размеру.','Договоритесь с магазинами об оптовых поставках.'],
+ sell:['markets','shops','wholesale','private'],sellNote:'Красный и жёлтый перец продаётся дороже зелёного, но дольше созревает.',
+ cal:'-SGGSGHHH---',split:[['Рассада/семена',.2],['Опоры',.2],['Полив',.3],['Укрытие, подкормки',.3]]},
+
+{id:'radish',emoji:'🔴',name:'Редис',tag:'Самый быстрый овощ: урожай через 3–4 недели',cat:'veg',
+ spaces:['balcony','greenhouse','plot'],indoor:false,needDays:50,minArea:.5,maxArea:5000,
+ self:.7,profit:.6,diff:1,capex:300,yield:6,price:150,opex:.4,delay:0,
+ time:'Урожай через 20–30 дней после посева',
+ about:'Редис — корнеплод, который созревает за 3–4 недели. Популярен весной и ранним летом.',
+ use:['Быстрый урожай для начинающих','Свежие салаты и закуски','Продажа пучками весной и осенью'],
+ equip:[['Семена редиса','раннеспелые сорта'],['Грядка или ящик','глубина от 15 см'],['Агроволокно','от заморозков и вредителей'],['Лейка или капельный полив','ровная влага'],['Лента для посева или маркер','равномерные рядки']],
+ steps:[['Подготовьте почву','Рыхлая, без свежего навоза, глубина 15 см.'],['Посейте','Семена на 1–2 см, междурядья 10–15 см, одно семя каждые 3–4 см.'],['Поливайте регулярно','Ровная влага — иначе корнеплоды растрескиваются и деревенеют.'],['Защищайте','Агроволокном от крестоцветной блошки.'],['Собирайте','Через 20–30 дней, когда корнеплод 2–3 см, пока не перерос.']],
+ tip:'Загущённые и пересохшие посевы дают пустые корнеплоды. Сейте партиями каждые 10–14 дней.',
+ risk:'Быстро перерастает и теряет цену. Планируйте сбор и продажу заранее.',
+ seedQ:'семена редиса раннего',seedNote:'Берите проверенные раннеспелые сорта с круглым корнеплодом; для продажи — те, что долго держат товарный вид.',
+ eqQ:'агроволокно для грядок',
+ diy:['Грядки-ящики из досок.','Лента для посева: туалетная бумага с семенами на клейстере.','Укрытие из дуг и агроволокна.'],
+ mistakes:['Редкий и нерегулярный полив.','Поздний сбор — полые корнеплоды.','Посев в жару — цветушность.'],
+ scale:['Поточный посев каждые 10–14 дней.','Теплица продлевает сезон.','Продажа пучками с ботвой через ярмарки и магазины.'],
+ sell:['markets','shops','private','wholesale'],sellNote:'Пучки с ботвой выглядят свежее и продаются дороже.',
+ cal:'---SHH-SHH--',split:[['Семена',.2],['Грядки, укрытие',.4],['Полив',.3],['Прочее',.1]]},
+
+{id:'seedlings',emoji:'🌸',name:'Рассада цветов',tag:'Петунии, бархатцы, сальвия — сезонный бизнес на весну',cat:'decor',unit:'шт.',
+ spaces:['apartment','balcony','greenhouse'],indoor:true,needDays:0,minArea:3,maxArea:200,
+ self:.5,profit:.7,diff:2,capex:2500,yield:150,price:40,opex:.5,delay:0,
+ time:'Рассада готова через 8–12 недель после посева',
+ about:'Рассада однолетних цветов — петунии, бархатцев, сальвии — товар весеннего сезона для клумб и балконов.',
+ use:['Рассада для клумб и балконов','Сезонный спрос: апрель–июнь','Продажа в кассетах, горшках и ящиках'],
+ equip:[['Кассеты и горшки','от 0,2 до 1 л'],['Субстрат для рассады','торф с перлитом'],['Фитолампы','для ранних посевов в январе–феврале'],['Стеллажи','несколько ярусов'],['Поддоны для нижнего полива','равномерная влага'],['Семена цветов','петуния, бархатцы, сальвия']],
+ steps:[['Посейте','Январь–март на поверхность влажного субстрата; мелкие семена (петуния) не заделывайте.'],['Прорастите','Накройте плёнкой, +22…25 °C, свет. Всходы через 5–14 дней.'],['Пикируйте','В фазе 2 настоящих листьев — в кассеты или горшки.'],['Растите','Свет 12–14 часов, +16…20 °C, раз в неделю слабая подкормка.'],['Закаляйте и продавайте','Апрель–июнь: выносите на воздух, продавайте до начала цветения или на старте.']],
+ tip:'Ключ — время: рассада должна быть готова точно к сезону посадки.',
+ risk:'Сезонный товар: нераспроданное быстро теряет цену. Принимайте предзаказы заранее.',
+ seedQ:'семена петунии бархатцы',seedNote:'Берите семена известных производителей; для мелких семян (петуния) удобны гранулированные. Планируйте разные цвета.',
+ eqQ:'кассеты для рассады фитолампа',
+ diy:['Стеллаж из дерева или металла.','Поддоны для нижнего полива из пищевых лотков.','Мини-теплицы из прозрачных контейнеров для всходов.'],
+ mistakes:['Слишком ранний посев — рассада вытягивается.','Нет закаливания — стресс после высадки.','Нет предзаказов на сезон.'],
+ scale:['Продавайте через садовые центры и маркетплейсы.','Увеличьте ассортимент до 8–12 видов.','Начинайте принимать предзаказы с января.'],
+ sell:['private','online','markets','shops'],sellNote:'Предзаказы и договорённости с магазинами и садовыми центрами снимают главный риск — остатки.',
+ cal:'SSGGHH------',split:[['Кассеты, горшки',.2],['Освещение',.3],['Стеллажи и полив',.3],['Семена и субстрат',.2]]},
+
+{id:'succ',emoji:'🪴',name:'Суккуленты и комнатные растения',tag:'Размножаются листом и черенком, легко транспортируются',cat:'decor',unit:'шт.',
+ spaces:['apartment','balcony','greenhouse'],indoor:true,needDays:0,minArea:2,maxArea:40,
+ self:.85,profit:.6,diff:1,capex:6000,yield:90,price:180,opex:.45,delay:0,
+ time:'Товарный вид через 4–8 месяцев',
+ about:'Суккуленты и неприхотливые комнатные растения: эхеверии, хавортии, алоэ, толстянки. Легко размножаются листом и черенком.',
+ use:['Подарочные композиции и наборы','Продажа молодых растений в горшках 6–10 см','Неприхотливы и хорошо переносят перевозку'],
+ equip:[['Горшки 5–10 см','с дренажем'],['Грунт для суккулентов','рыхлый с перлитом и песком'],['Стеллаж с подсветкой','нужно много света'],['Материнские растения','для листовых и стеблевых черенков'],['Опрыскиватель и лейка','умеренный полив'],['Упаковка','коробки и крафт-бумага для доставки']],
+ steps:[['Подготовьте маточные растения','Купите здоровые экземпляры нужных видов.'],['Размножьте','Отделите листья или черенки, подсушите срез 1–2 дня, положите на сухой грунт.'],['Укореняйте','Свет, тепло +20…25 °C, редкое опрыскивание. Корни появятся через 2–4 недели.'],['Пересадите','В горшки с дренажем, полив редкий.'],['Продавайте','Через 4–8 месяцев, когда растение окрепло и имеет хороший вид.']],
+ tip:'Главный враг — перелив. Поливайте, когда грунт полностью просох.',
+ risk:'Рост медленный: оборот капитала 4–8 месяцев. Сначала проверьте спрос на небольшой партии.',
+ seedQ:'суккуленты эхеверия хавортия',seedNote:'Покупайте маточные растения у проверенных питомников; убедитесь, что растения здоровы и без вредителей.',
+ eqQ:'грунт для суккулентов горшки',
+ diy:['Стеллаж с подсветкой из дерева и фитолинеек.','Грунт: универсальный грунт, перлит и крупный песок.','Подарочные композиции в керамических горшках и кашпо.'],
+ mistakes:['Переливают — гниют корни.','Мало света — растения вытягиваются.','Нет упаковки для перевозки: растения ломаются.'],
+ scale:['Добавьте стеллаж и расширьте ассортимент.','Продавайте композиции и наборы — выше цена.','Откройте онлайн-витрину с доставкой.'],
+ sell:['online','private','markets','shops'],sellNote:'Композиции и наборы продаются дороже одиночных растений.',
+ cal:'CCCCCCCCCCCC',split:[['Стеллаж и подсветка',.4],['Горшки и грунт',.25],['Маточные растения',.25],['Упаковка, мелочи',.1]]},
+
+{id:'lavender',emoji:'💜',name:'Лаванда',tag:'Ароматный кустарник: цветы, саше, масло и саженцы',cat:'decor',
+ spaces:['plot','greenhouse'],indoor:false,needDays:130,minArea:20,maxArea:20000,
+ self:.7,profit:.65,diff:2,capex:350,yield:.25,price:1500,opex:.5,delay:1,
+ time:'Полный урожай со 2–3 года',
+ about:'Лаванда — многолетний ароматный кустарник. Продают сухие цветы, саше, эфирное масло и саженцы.',
+ use:['Сухоцвет, саше, чаи и ароматические наборы','Саженцы для сада','Агротуризм и фотозоны'],
+ equip:[['Саженцы лаванды','морозостойкие сорта'],['Лёгкая почва с дренажем','нейтральная или слабощелочная'],['Мульча (щебень, гравий)','сухая шея куста'],['Секатор','обрезка'],['Сушилка','тёплое проветриваемое место'],['Упаковка','мешочки, коробки']],
+ steps:[['Выберите место','Солнечное, продуваемое, с дренажем; кислую почву известкуйте.'],['Посадите','Весной (апрель–май), расстояние 50–80 см.'],['Ухаживайте','Умеренный полив, без застоя воды, мульча щебнем.'],['Обрезайте','Весной (формирование) и после цветения.'],['Собирайте','В начале цветения, когда раскрылась треть цветков. Сушите в тени.']],
+ tip:'Для холодных регионов берите морозостойкие сорта и укрывайте на зиму.',
+ risk:'В холодных регионах риск вымерзания. Полный урожай — со 2–3 года.',
+ seedQ:'саженцы лаванды узколистной',seedNote:'Берите морозостойкие сорта лаванды узколистной у питомника с документами; саженцы с закрытым корнем приживаются лучше.',
+ eqQ:'секатор садовый сушилка для трав',
+ diy:['Сушилка: рама с сеткой в тёплом проветриваемом месте без прямого солнца.','Саше и подарочные наборы из мешочков и крафт-бумаги.','Мульча из щебня или гравия вокруг кустов.'],
+ mistakes:['Застой воды и тяжёлая глина — гниль корней.','Не обрезают — кусты разваливаются.','Нет укрытия на зиму в холодных регионах.'],
+ scale:['Добавьте продукцию: саше, масло, чаи.','Продавайте саженцы.','Организуйте приём гостей на период цветения.'],
+ sell:['online','markets','private','shops'],sellNote:'Продают не растение, а продукты и впечатления: саше, наборы, фото на плантации.',
+ cal:'---SSGHHG---',split:[['Саженцы',.5],['Мульча, подготовка почвы',.2],['Полив',.15],['Сушилка, упаковка',.15]]},
+
+{id:'tulip',emoji:'🌷',name:'Тюльпаны к 8 Марта',tag:'Выгонка цветов точно к празднику',cat:'decor',unit:'шт.',
+ spaces:['greenhouse','apartment'],indoor:true,needDays:0,minArea:6,maxArea:300,
+ self:.5,profit:.8,diff:3,capex:6000,yield:300,price:70,opex:.55,delay:0,
+ time:'Цветение через 14–20 недель после посадки',
+ spaceNotes:{apartment:'Нужно холодное помещение (+2…+9 °C) для охлаждения луковиц'},
+ about:'Выгонка тюльпанов — выращивание цветов точно к праздникам (14 февраля, 8 Марта). Требует холода и точных сроков.',
+ use:['Продажа цветов к 14 февраля и 8 Марта','Продажа горшечных тюльпанов','Сезонный бизнес с высокой наценкой'],
+ equip:[['Луковицы для выгонки','крупные, окружность 12 см и более'],['Холодильная камера или подвал','охлаждение +2…+9 °C'],['Ящики и субстрат','торф или кокос'],['Теплица или тёплое помещение','+15…18 °C для выгонки'],['Досветка','зимой'],['Термометр и гигрометр','контроль температуры']],
+ steps:[['Подготовьте луковицы','Купите для выгонки, отсортируйте, храните при +17 °C до посадки.'],['Посадите','Осенью (октябрь) плотно в ящики с влажным субстратом, носиками вверх.'],['Охладите','12–16 недель при +2…+9 °C до укоренения и появления ростков.'],['Выгоните','Перенесите в тепло +15…18 °C, свет, полив. Цветение через 3–4 недели.'],['Срежьте','В фазе окрашенного бутона. Свяжите пучками по 10 штук, охладите.']],
+ tip:'Расчёт сроков — главное: считайте от даты праздника назад. Ошибка в 1–2 недели — потеря урожая.',
+ risk:'Рынок сезонный и конкурентный; главные риски — точность сроков и дата праздника.',
+ seedQ:'луковицы тюльпанов для выгонки',seedNote:'Берите луковицы, специально подготовленные для выгонки, у проверенных поставщиков; уточните сорт и срок цветения.',
+ eqQ:'термометр гигрометр холодильная камера',
+ diy:['Холодильная камера из утеплённого помещения с кондиционером или холодильным агрегатом.','Ящики из пищевых контейнеров с отверстиями.','Стеллажи для ящиков в несколько ярусов.'],
+ mistakes:['Сорвали сроки охлаждения.','Слишком высокая температура при выгонке — слабые стебли.','Нет предзаказов к празднику.'],
+ scale:['Отдельная камера охлаждения и теплица для выгонки.','Увеличьте число сортов и сроков цветения.','Договоритесь с цветочными магазинами заранее.'],
+ sell:['shops','private','online','markets'],sellNote:'Заключайте предзаказы с магазинами заранее: товар нужен точно к дате.',
+ cal:'GHH------SGG',split:[['Помещение, охлаждение',.4],['Луковицы',.3],['Ящики, субстрат',.15],['Освещение, контроль',.15]]},
+
+{id:'berrybush',emoji:'🫐',name:'Саженцы ягодных кустов',tag:'Смородина, крыжовник, жимолость — продаются каждый сезон',cat:'trees',unit:'шт.',
+ spaces:['plot','greenhouse'],indoor:false,needDays:110,minArea:50,maxArea:20000,
+ self:.5,profit:.75,diff:2,capex:300,yield:6,price:250,opex:.5,delay:1,
+ time:'Товарные саженцы через 1 год после черенкования',
+ about:'Саженцы смородины, крыжовника, жимолости — привлекательный бизнес: черенкование простое, а саженцы покупают каждый сезон.',
+ use:['Продажа укоренённых саженцев весной и осенью','Свои ягоды для семьи','Питомник можно развивать постепенно'],
+ equip:[['Маточные кусты','здоровые районированные сорта'],['Грядка для укоренения','лёгкая почва'],['Плёнка или мини-теплица','влажность для черенков'],['Секатор','заготовка черенков'],['Стимулятор корнеобразования','по инструкции'],['Упаковка и этикетки','с названием сорта']],
+ steps:[['Заготовьте черенки','Одревесневшие — осенью или ранней весной, длиной 15–20 см.'],['Посадите','В рыхлую почву под углом, оставив 1–2 почки над землёй.'],['Поддерживайте влагу','Мульча, притенение, регулярный полив.'],['Растите','Подкормки азотом летом, прополка.'],['Выкопайте и продавайте','Осенью или следующей весной — с комом или в контейнере.']],
+ tip:'Репутация — это правильный сорт и здоровые корни. Не продавайте «безымянные» саженцы.',
+ risk:'Рост медленный; первый доход через год. Продавать нужно в сезон посадки.',
+ seedQ:'смородина крыжовник жимолость саженцы',seedNote:'Маточные кусты берите у питомника с документами на сорт; для продажи важно не путать сорта.',
+ eqQ:'секатор садовый стимулятор корнеобразования',
+ diy:['Мини-теплицы для черенков из дуг и плёнки.','Этикетки из пластика с названием сорта.','Грядки-питомник с мульчой.'],
+ mistakes:['Путают сорта — теряют доверие покупателей.','Пересушивают черенки.','Нет плана продаж на сезон.'],
+ scale:['Добавьте сорта и виды кустов.','Продавайте в контейнерах — удобнее покупателю.','Создайте страницу питомника в соцсетях.'],
+ sell:['private','online','markets','shops'],sellNote:'Саженцы покупают в сезон посадки; соберите предзаказы с зимы.',
+ cal:'--HHSGGGGHH-',split:[['Маточные кусты',.3],['Грядки, укрытия',.3],['Полив',.2],['Упаковка, этикетки',.2]]},
+
+{id:'blueberry',emoji:'🫐',name:'Голубика садовая',tag:'Дорогая ягода, но требовательная к почве',cat:'trees',
+ spaces:['plot','greenhouse'],indoor:false,needDays:120,minArea:30,maxArea:20000,
+ self:.6,profit:.8,diff:3,capex:2500,yield:1.5,price:700,opex:.5,delay:2,
+ time:'Полный урожай на 3–4 год',
+ about:'Голубика садовая — высокодоходная ягода, но требовательная: нужна кислая почва (pH 4–5), торф и постоянная влага.',
+ use:['Свежая ягода и заморозка','Продажа саженцев','Самосбор и агротуризм'],
+ equip:[['Саженцы голубики','2–3 летние в контейнерах'],['Кислый торф и хвойная подстилка','pH 4–5'],['Капельный полив','обязательно'],['Мульча из коры или опилок','слой 10 см'],['Измеритель pH','для контроля'],['Подкормка для кислолюбивых','специальные удобрения']],
+ steps:[['Подготовьте посадочное место','Яма 60×60 см, заполните кислым торфом с песком; pH 4–5.'],['Посадите','Весной, расстояние 1–1,5 м, мульчируйте корой или опилками 10 см.'],['Поливайте регулярно','Почва всегда влажная, но без застоя; капельный полив.'],['Подкармливайте','Удобрениями для кислолюбивых, раз в месяц весной и летом.'],['Собирайте','Со 2–3 года. Ягода созревает неравномерно, собирайте каждые 3–5 дней.']],
+ tip:'Следите за кислотностью почвы: при pH выше 5,5 куст чахнет.',
+ risk:'Высокие стартовые вложения и долгая окупаемость; ошибка в кислотности убивает кусты.',
+ seedQ:'саженцы голубики садовой',seedNote:'Берите двух-трёхлетние саженцы в контейнерах у проверенного питомника; выбирайте сорта, подходящие вашему климату.',
+ eqQ:'торф кислый для голубики pH метр',
+ diy:['Кислый субстрат: верховой торф, хвойная подстилка и песок.','Мульча из коры или опилок.','Капельный полив из шланга с капельницами.'],
+ mistakes:['Не проверили кислотность почвы.','Поливают жёсткой водой — рост останавливается.','Не мульчируют — пересыхают корни.'],
+ scale:['Добавляйте ряды постепенно, пока отработана технология.','Организуйте самосбор.','Продавайте саженцы.'],
+ sell:['markets','private','shops','horeca'],sellNote:'Ягода дорогая, но нестабильная по срокам: договаривайтесь о продаже заранее.',
+ cal:'---SSGHHHG--',split:[['Саженцы',.4],['Подготовка почвы, торф',.25],['Капельный полив',.2],['Мульча, подкормки',.15]]},
+
+{id:'fruit',emoji:'🍎',name:'Саженцы плодовых деревьев',tag:'Яблони, груши, сливы: долгий цикл, но стабильный спрос',cat:'trees',unit:'шт.',
+ spaces:['plot'],indoor:false,needDays:120,minArea:100,maxArea:100000,
+ self:.4,profit:.7,diff:3,capex:350,yield:4,price:600,opex:.55,delay:2,
+ time:'Продажа саженцев через 2–3 года',
+ about:'Саженцы плодовых деревьев — яблони, груши, сливы. Выращивают в питомнике 2–3 года, затем продают с комом или в контейнере.',
+ use:['Продажа саженцев осенью и весной','Собственный сад','Питомник — долгосрочный бизнес'],
+ equip:[['Подвои','клоновые или семенные'],['Привойные черенки','от проверенных сортов'],['Прививочный нож и лента','для окулировки'],['Грядки или контейнеры','питомник'],['Капельный полив','регулярная влага'],['Этикетки и упаковка','название сорта обязательно']],
+ steps:[['Посадите подвои','Весной в питомник, междурядья 70–90 см.'],['Привейте','Летом (окулировка) или весной (копулировка) нужным сортом.'],['Ухаживайте','Полив, прополка, подкормки, защита от вредителей.'],['Формируйте','Обрезка и формирование ствола и кроны.'],['Выкопайте и продайте','Через 2–3 года — осенью или весной с комом земли.']],
+ tip:'Научитесь прививке на практике (курсы или мастер-класс) до крупных вложений.',
+ risk:'Долгий цикл (2–3 года), нужны навыки и репутация; спрос зависит от региона.',
+ seedQ:'подвои яблони привойные черенки',seedNote:'Подвои и привойные черенки берите у питомников с документами; важно точное название сорта и подвоя.',
+ eqQ:'прививочный нож секатор садовый',
+ diy:['Грядки-питомник с мульчой и капельным поливом.','Этикетки из пластика с названием сорта и подвоя.','Укрытие для зимовки молодых саженцев из лапника и агроволокна.'],
+ mistakes:['Путают сорта — теряют репутацию.','Не умеют прививать — большой процент потерь.','Нет плана продаж на 2–3 года вперёд.'],
+ scale:['Развивайте ассортимент: яблони, груши, сливы, вишни.','Продавайте в контейнерах — продлевает сезон продаж.','Создайте сайт или страницу питомника в соцсетях.'],
+ sell:['private','online','markets','wholesale'],sellNote:'Покупатели доверяют питомникам с репутацией: собирайте отзывы и фото своих деревьев.',
+ cal:'---SGGGSHHH-',split:[['Подвои и привои',.3],['Грядки, полив',.3],['Инструмент, этикетки',.15],['Подготовка земли, удобрения',.25]]}
+];
+
+(function mergeData(){
+  var i,k,p;
+  for(i=0;i<PLANTS.length;i++){
+    p=PLANTS[i];
+    if(EXTRA[p.id]){for(k in EXTRA[p.id])p[k]=EXTRA[p.id][k];}
+  }
+  for(i=0;i<NEWP.length;i++)PLANTS.push(NEWP[i]);
+})();
+
+/* ================= Утилиты ================= */
+
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function dec(n){return String(n).replace('.',',');}
+function fmtNum(n){try{return new Intl.NumberFormat('ru-RU').format(n);}catch(e){return String(n);}}
+function round2(n){
+  if(n>=1000){var d=Math.pow(10,Math.floor(Math.log(n)/Math.LN10)-1);return Math.round(n/d)*d;}
+  return Math.round(n);
+}
+function fmtMoney(n){
+  var s=n<0?'−':'';n=Math.abs(n);
+  if(n>=1e6)return s+dec(Math.round(n/1e5)/10)+' млн ₽';
+  return s+fmtNum(round2(n))+' ₽';
+}
+function fmtKg(n){
+  if(n>=1000)return dec(Math.round(n/100)/10)+' т';
+  if(n<10)return dec(Math.round(n*10)/10)+' кг';
+  return fmtNum(round2(n))+' кг';
+}
+function fmtMonths(m){
+  if(!isFinite(m)||m>120)return 'более 10 лет';
+  if(m<12)return '≈ '+Math.max(1,Math.round(m))+' мес.';
+  return '≈ '+dec(Math.round(m/12*10)/10)+' г.';
+}
+function fmtArea(m2){
+  if(m2>=10000)return dec(Math.round(m2/1000)/10)+' га';
+  if(m2>=300)return fmtNum(Math.round(m2))+' м² ('+dec(Math.round(m2/10)/10)+' сот.)';
+  return dec(Math.round(m2*10)/10)+' м²';
+}
+function chipLabel(space,v){
+  if(space==='plot'){
+    if(v>=10000)return dec(v/10000)+' га';
+    return dec(v/100)+' сот.';
+  }
+  return v+' м²';
+}
+function zoneName(days){
+  if(days<110)return 'очень холодный';
+  if(days<130)return 'холодный';
+  if(days<170)return 'умеренный';
+  if(days<210)return 'тёплый';
+  return 'субтропический';
+}
+function byId(list,id){for(var i=0;i<list.length;i++){if(list[i].id===id)return list[i];}return null;}
+function toM2(val,unit){
+  var v=parseFloat(String(val).replace(',','.'));
+  if(!isFinite(v))return NaN;
+  return unit==='га'?v*10000:unit==='сотки'?v*100:v;
+}
+function customCity(id){
+  var c=byId(CLIMATES,id);
+  return {id:'custom-'+id,name:'Другой город · '+c.name.toLowerCase()+' климат',days:c.days,winter:c.winter};
+}
+
+/* ================= Расчёт ================= */
+function evalPlant(p,st,area){
+  var c=st.city;
+  {
+    var reasons=[],warns=[],hard=false,extra=0;
+
+    var eff=c.days+(st.space==='greenhouse'?60:0)+(st.space==='balcony'?45:0);
+    var ratio=p.indoor?1.3:eff/p.needDays;
+    var cf=p.indoor?1:Math.max(.6,Math.min(1,ratio));
+    if(p.indoor){
+      reasons.push('Растёт круглый год — погода почти не влияет');
+      if(st.space==='greenhouse'&&c.winter<=-15){extra=.08;warns.push('Зимой теплицу придётся отапливать — учтено в расчёте');}
+    }else if(ratio<.85){
+      hard=true;warns.push('В вашем климате сезон слишком короткий для этой культуры');
+    }else if(ratio<1){
+      warns.push('Сезон коротковат — берите раннеспелые сорта');
+      reasons.push('Подходит при выборе раннеспелых сортов');
+    }else{
+      reasons.push(ratio>=1.2?'Безморозный период (~'+c.days+' дн.) подходит с запасом':'Сезон в вашем городе подходит');
+    }
+    if(p.spaceNotes&&p.spaceNotes[st.space])reasons.push(p.spaceNotes[st.space]);
+
+    var useArea=Math.min(area,p.maxArea),capped=area>p.maxArea;
+    if(area<p.minArea){
+      hard=true;warns.push('Маловато места: комфортный минимум — '+fmtArea(p.minArea));
+    }else if(capped){
+      reasons.push('Из '+fmtArea(area)+' под эту культуру разумно занять до '+fmtArea(p.maxArea));
+    }else{
+      reasons.push('Площадь '+fmtArea(area)+' подходит для этой культуры');
+    }
+
+    var yieldMul=(st.space==='greenhouse'&&!p.indoor)?1.5:(st.space==='balcony'?.8:1);
+    var yearKg=useArea*p.yield*yieldMul*cf;
+    var revenue=yearKg*p.price;
+    var opex=revenue*(p.opex+extra);
+    var profit=revenue-opex;
+    var capex=useArea*p.capex;
+    var payback=profit>0?capex/profit*12+p.delay*12:Infinity;
+
+    if(st.goal==='profit'){
+      reasons.push(isFinite(payback)&&payback<=36?'Окупаемость '+fmtMonths(payback):'Подходит как дополнение к основным культурам');
+    }else{
+      reasons.push(p.diff===1?'Простая культура — удобна для старта':'Даёт свежий урожай для семьи');
+    }
+
+    var gf=st.goal==='profit'?p.profit:p.self;
+    var afit=area<p.minArea?0:Math.min(1,p.maxArea/area);
+    var s=45+gf*28+(3-p.diff)*2+afit*10+cf*6;
+    if(st.goal==='profit'){
+      s+=payback<=12?8:payback<=24?4:0;
+      if(profit<=0)s-=20;
+    }
+    if(hard)s-=25;
+
+    return {p:p,score:s,match:Math.max(30,Math.min(97,Math.round(s))),hard:hard,warns:warns,reasons:reasons,
+      useArea:useArea,capped:capped,yearKg:yearKg,revenue:revenue,opex:opex,profit:profit,capex:capex,payback:payback};
+  }
+}
+function compute(st){
+  var area=toM2(st.areaVal,st.areaUnit),list=[];
+  for(var i=0;i<PLANTS.length;i++){
+    var p=PLANTS[i];
+    if(p.spaces.indexOf(st.space)<0)continue;
+    list.push(evalPlant(p,st,area));
+  }
+  list.sort(function(a,b){return b.score-a.score;});
+  var good=list.filter(function(r){return !r.hard;});
+  var bad=list.filter(function(r){return r.hard;});
+  return good.length>=3?good:good.concat(bad);
+}
+
+/* ================= Состояние ================= */
+var ORDER=['intro','city','space','area','goal','analyze','result'];
+var state={screen:'intro',city:null,cityOther:false,q:'',space:null,areaVal:'',areaUnit:'м²',goal:null,
+  results:null,detailId:null,tab:'use',scrollY:0,cat:'all',showAll:false,sheet:null,sheetPlan:'all'};
+var analysisRun=0;
+var STORE='smartgarden.v1';
+
+function save(){
+  try{
+    window.localStorage.setItem(STORE,JSON.stringify({city:state.city&&state.city.id,space:state.space,
+      areaVal:state.areaVal,areaUnit:state.areaUnit,goal:state.goal}));
+  }catch(e){}
+}
+function load(){
+  try{
+    var d=JSON.parse(window.localStorage.getItem(STORE)||'null');
+    if(!d)return;
+    if(d.city){
+      if(String(d.city).indexOf('custom-')===0&&byId(CLIMATES,d.city.slice(7))){state.city=customCity(d.city.slice(7));state.cityOther=true;}
+      else state.city=byId(CITIES,d.city);
+    }
+    if(byId(SPACES,d.space))state.space=d.space;
+    if(typeof d.areaVal==='string')state.areaVal=d.areaVal;
+    if(['м²','сотки','га'].indexOf(d.areaUnit)>=0)state.areaUnit=d.areaUnit;
+    if(byId(GOALS,d.goal))state.goal=d.goal;
+  }catch(e){}
+}
+
+/* ================= Тема и Telegram ================= */
+function applyTheme(){
+  var dark=false;
+  if(tg&&tg.colorScheme)dark=tg.colorScheme==='dark';
+  else if(window.matchMedia)dark=window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  try{
+    if(tg){
+      if(tg.setHeaderColor)tg.setHeaderColor(dark?'#121a14':'#f4f7f1');
+      if(tg.setBackgroundColor)tg.setBackgroundColor(dark?'#121a14':'#f4f7f1');
+    }
+  }catch(e){}
+}
+function haptic(){try{if(tg&&tg.HapticFeedback)tg.HapticFeedback.selectionChanged();}catch(e){}}
+function updateBack(){
+  try{
+    if(!tg||!tg.BackButton)return;
+    if(state.screen!=='intro'||state.detailId)tg.BackButton.show();else tg.BackButton.hide();
+  }catch(e){}
+}
+
+/* ================= Экраны ================= */
+function progress(n){
+  var h='<div class="progress">';
+  for(var i=1;i<=5;i++)h+='<i class="'+(i<=n?'on':'')+'"></i>';
+  return h+'</div><div class="stepno">Шаг '+n+' из 5</div>';
+}
+function bar(label){
+  return '<div class="bar"><button class="btn" id="nextBtn" data-act="next"'+(canNext()?'':' disabled')+'>'+esc(label)+'</button></div>';
+}
+function canNext(){
+  switch(state.screen){
+    case 'city':return !!state.city;
+    case 'space':return !!state.space;
+    case 'area':var m=toM2(state.areaVal,state.areaUnit);return isFinite(m)&&m>=0.1&&m<=5000000;
+    case 'goal':return !!state.goal;
+  }
+  return true;
+}
+
+function viewIntro(){
+  var steps=[['Город','Климат, температура, сезонность'],['Пространство','Балкон, квартира, теплица, участок'],
+    ['Площадь','От 1 м² до нескольких гектаров'],['Цель','Для себя или для заработка'],
+    ['Анализ','Подбор культур, условия и экономика']];
+  var h='<div class="hero-intro"><div class="big">🌱</div><h1>Умный сад</h1><p>Найди своё направление выращивания: ответьте на 4 вопроса — получите персональную рекомендацию.</p></div><ol class="flow">';
+  steps.forEach(function(s,i){h+='<li><span class="n">'+(i+1)+'</span><div><b>'+s[0]+'</b><span>'+s[1]+'</span></div></li>';});
+  h+='</ol><div class="bar"><button class="btn" data-act="start">Начать</button></div>';
+  return h;
+}
+
+function viewCity(){
+  return progress(1)+'<h1>Выберите город</h1><p class="sub">Климат, температура, сезонность</p>'+
+    '<div id="cityInfo"></div>'+
+    '<input class="search" id="citySearch" type="search" placeholder="Поиск города" autocomplete="off" value="'+esc(state.q)+'">'+
+    '<div id="cityList"></div>'+bar('Далее');
+}
+function fillCityList(){
+  var el=document.getElementById('cityList');if(!el)return;
+  var q=(state.q||'').toLowerCase().trim();
+  var h='';
+  CITIES.forEach(function(c){
+    if(q&&c.name.toLowerCase().indexOf(q)<0)return;
+    h+='<button class="city'+(state.city&&state.city.id===c.id?' sel':'')+'" data-act="pick-city" data-id="'+c.id+'"><span>'+esc(c.name)+'</span><small>'+zoneName(c.days)+'</small></button>';
+  });
+  h+='<button class="city'+(state.cityOther?' sel':'')+'" data-act="other-city"><span>Другой город</span><small>выбрать климат</small></button>';
+  if(state.cityOther){
+    h+='<div class="climates">';
+    CLIMATES.forEach(function(c){
+      var sel=state.city&&state.city.id==='custom-'+c.id;
+      h+='<button class="city'+(sel?' sel':'')+'" data-act="pick-climate" data-id="'+c.id+'"><span>'+c.name+'<br><small>'+c.desc+'</small></span></button>';
+    });
+    h+='</div>';
+  }
+  el.innerHTML=h;
+}
+function fillCityInfo(){
+  var el=document.getElementById('cityInfo');if(!el)return;
+  var c=state.city;
+  el.innerHTML=c?'<div class="info"><b>'+esc(c.name)+'</b><br>Климат: '+zoneName(c.days)+' · безморозный период ≈ '+c.days+' дн. · январь ≈ '+(c.winter>0?'+':'')+String(c.winter).replace('-','−')+' °C</div>':'';
+}
+function updateNext(){var b=document.getElementById('nextBtn');if(b)b.disabled=!canNext();}
+
+function viewSpace(){
+  var h=progress(2)+'<h1>Выберите пространство</h1><p class="sub">Где вы будете выращивать?</p><div class="opts">';
+  SPACES.forEach(function(s){
+    h+='<button class="opt'+(state.space===s.id?' sel':'')+'" data-act="pick-space" data-id="'+s.id+'"><span class="ic">'+s.emoji+'</span><div><b>'+s.name+'</b><span>'+s.desc+'</span></div></button>';
+  });
+  return h+'</div>'+bar('Далее');
+}
+
+function viewArea(){
+  var chips=(AREA_CHIPS[state.space]||AREA_CHIPS.balcony).map(function(v){
+    return '<button class="chip" data-act="chip" data-m2="'+v+'">'+chipLabel(state.space,v)+'</button>';
+  }).join('');
+  var units=['м²','сотки','га'].map(function(u){return '<option'+(state.areaUnit===u?' selected':'')+'>'+u+'</option>';}).join('');
+  return progress(3)+'<h1>Площадь выращивания</h1><p class="sub">От 1 м² до нескольких гектаров</p>'+
+    '<div class="areabox"><input id="areaInput" inputmode="decimal" placeholder="0" autocomplete="off" value="'+esc(state.areaVal)+'"><select id="areaUnit">'+units+'</select></div>'+
+    '<div class="hint" id="areaHint"></div><div class="chips">'+chips+'</div>'+bar('Далее');
+}
+function fillAreaHint(){
+  var el=document.getElementById('areaHint');if(!el)return;
+  var m=toM2(state.areaVal,state.areaUnit);
+  if(!state.areaVal)el.textContent='Введите площадь или выберите вариант ниже';
+  else if(!isFinite(m)||m<0.1||m>5000000)el.textContent='Допустимо от 0,1 м² до 500 га';
+  else el.textContent='≈ '+fmtArea(m);
+}
+
+function viewGoal(){
+  var h=progress(4)+'<h1>Ваша цель</h1><p class="sub">Зачем вы хотите выращивать?</p><div class="opts">';
+  GOALS.forEach(function(g){
+    h+='<button class="opt'+(state.goal===g.id?' sel':'')+'" data-act="pick-goal" data-id="'+g.id+'"><span class="ic">'+g.emoji+'</span><div><b>'+g.name+'</b><span>'+g.desc+'</span></div></button>';
+  });
+  return h+'</div>'+bar('Подобрать культуры');
+}
+
+function viewAnalyze(){
+  return progress(5)+'<h1>Анализ</h1><p class="sub">Подбираем лучшее направление для вас</p>'+
+    '<ul class="work"><li id="a1"><span class="dot"></span>Подбираем культуры под ваш климат</li>'+
+    '<li id="a2"><span class="dot"></span>Рассчитываем условия выращивания</li>'+
+    '<li id="a3"><span class="dot"></span>Считаем экономику</li></ul>';
+}
+function startAnalysis(){
+  state.screen='analyze';state.results=null;
+  var run=++analysisRun;
+  render(true);
+  function mark(id,cls){var e=document.getElementById(id);if(e)e.className=cls;}
+  function alive(){return run===analysisRun&&state.screen==='analyze';}
+  setTimeout(function(){if(alive())mark('a1','act');},50);
+  setTimeout(function(){if(alive()){mark('a1','done');mark('a2','act');}},900);
+  setTimeout(function(){if(alive()){mark('a2','done');mark('a3','act');}},1800);
+  setTimeout(function(){
+    if(!alive())return;
+    mark('a3','done');
+    state.results=compute(state);
+    state.screen='result';
+    render(true);
+  },2700);
+}
+
+/* ================= v2: доступ, разделы плана, окно оплаты ================= */
+var ICO_LOCK='<svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+var ICO_CHEV='<svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+var ACCESS_KEY='smartgarden.access.v1';
+var access={all:false,ids:[]};
+var toastT=null;
+
+function loadAccess(){
+  try{
+    var d=JSON.parse(window.localStorage.getItem(ACCESS_KEY)||'null');
+    if(d){access.all=!!d.all;access.ids=Array.isArray(d.ids)?d.ids:[];}
+  }catch(e){}
+}
+function saveAccess(){try{window.localStorage.setItem(ACCESS_KEY,JSON.stringify(access));}catch(e){}}
+function isUnlocked(id){return access.all||access.ids.indexOf(id)>=0;}
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t);}
+  t.textContent=msg;t.classList.add('on');
+  clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},2600);
+}
+function openUrl(u){
+  if(!/^https:\/\//.test(u))return;
+  try{if(tg&&tg.openLink){tg.openLink(u);return;}}catch(e){}
+  window.open(u,'_blank','noopener');
+}
+function copyText(txt){
+  function fallback(){
+    try{
+      var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();var ok=document.execCommand('copy');document.body.removeChild(ta);
+      toast(ok?'Текст скопирован':'Не удалось скопировать — выделите текст вручную');
+    }catch(e){toast('Не удалось скопировать — выделите текст вручную');}
+  }
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('Текст скопирован');},fallback);}
+    else fallback();
+  }catch(e){fallback();}
+}
+
+function fmtQty(n,u){return u==='шт.'?fmtNum(round2(n))+' шт.':fmtKg(n);}
+function fmtMoney1(n){return n<100?dec(Math.round(n*10)/10)+' ₽':fmtMoney(n);}
+function unitWord(p){return p.unit==='шт.'?'1 шт.':'1 кг';}
+function cityName(){return state.city&&String(state.city.id).indexOf('custom-')!==0?state.city.name:'';}
+function mapQuery(p,kind){
+  var what=kind==='equip'?(p.indoor?'магазин фитоламп и гидропоники':'товары для сада и огорода'):
+    (p.cat==='trees'?'питомник растений':p.cat==='decor'?'садовый центр':'магазин семян');
+  return (what+' '+cityName()).trim();
+}
+
+/* ---- статистика ---- */
+function statsFor(r){
+  var diff=[DIFF[r.p.diff],'сложность'];
+  if(state.goal==='profit')return [[fmtMoney(r.profit),'прибыль в год'],[fmtMonths(r.payback),'окупаемость'],diff];
+  return [[fmtQty(r.yearKg,r.p.unit),r.p.unit==='шт.'?'объём в год':'урожая в год'],[fmtMoney(r.profit),'выгода в год'],diff];
+}
+function statsHtml(r){
+  return '<div class="stats">'+statsFor(r).map(function(s){return '<div><b>'+esc(s[0])+'</b><span>'+s[1]+'</span></div>';}).join('')+'</div>';
+}
+
+/* ---- разделы платного плана ---- */
+var SECS=[
+ {id:'grow',e:'🌱',t:'Как правильно выращивать',tz:function(p){return p.steps.length+' шагов от посева до сбора';}},
+ {id:'cal',e:'📅',t:'Календарь посадки и сбора',tz:function(){return 'Месяц за месяцем для вашего региона';}},
+ {id:'mist',e:'⚠️',t:'Какие ошибки допускают новички',tz:function(p){return p.mistakes.length+' ошибки, которые стоят денег';}},
+ {id:'seed',e:'🌰',t:'Где купить семена в вашем городе',tz:function(){return 'Что покупать и где искать';}},
+ {id:'equip',e:'🛒',t:'Где купить готовое оборудование',tz:function(p){return p.equip.length+' позиций и на что смотреть';}},
+ {id:'diy',e:'🔧',t:'Как собрать оборудование самостоятельно',tz:function(){return 'Материалы и порядок сборки';}},
+ {id:'start',e:'💼',t:'Сколько денег потребуется для старта',tz:function(){return 'Смета по статьям и резерв';}},
+ {id:'cost',e:'🧮',t:'Как рассчитать себестоимость',tz:function(){return 'Формула и цена безубыточности';}},
+ {id:'earn',e:'📈',t:'Сколько можно заработать',tz:function(){return '3 сценария: осторожный, базовый, оптимистичный';}},
+ {id:'sell',e:'🏪',t:'Кому продать: где реализовать продукцию',tz:function(){return '6 каналов, какие подходят именно вам';}},
+ {id:'buyers',e:'🤝',t:'Как найти постоянных покупателей',tz:function(){return '5 шагов и готовый шаблон письма';}},
+ {id:'scale',e:'🚀',t:'Как масштабировать производство',tz:function(){return 'Прогноз при росте площади';}}
+];
+var GROUPS=[
+ {t:'Вырастить',ids:['grow','cal','mist']},
+ {t:'Запустить',ids:['seed','equip','diy','start','cost']},
+ {t:'Заработать',ids:['earn','sell','buyers','scale']}
+];
+var MONTHS=['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+
+function calHtml(p){
+  var shift=0,note='';
+  if(!p.indoor&&state.space==='plot'){
+    var d=state.city.days;shift=d<120?1:(d>=200?-1:0);
+    if(shift)note='Сроки сдвинуты на '+(shift>0?'месяц позже':'месяц раньше')+' с учётом климата вашего города.';
+  }
+  var CL={S:'Посев',G:'Рост',H:'Сбор',C:'Посев и сбор','-':'Покой'};
+  var s=p.cal||'CCCCCCCCCCCC',h='<div class="cal">';
+  for(var i=0;i<12;i++){
+    var ch=s.charAt(((i-shift)%12+12)%12);
+    h+='<div class="m-'+ch+'"><b>'+MONTHS[i]+'</b>'+CL[ch]+'</div>';
+  }
+  h+='</div><div class="legend"><span class="m-S">Посев / посадка</span><span class="m-G">Рост</span><span class="m-H">Сбор</span><span class="m-C">Посев и сбор весь год</span></div>';
+  if(note)h+='<p class="small muted">'+note+'</p>';
+  if(p.indoor)h+='<p class="small muted">Выращивание в помещении не зависит от сезона: стартовать можно в любой месяц.</p>';
+  return h;
+}
+function lnks(arr){
+  return '<div class="lnks">'+arr.map(function(a){return '<button class="lnk" data-act="link" data-url="'+esc(a[1])+'">'+esc(a[0])+' ↗</button>';}).join('')+'</div>';
+}
+function scaleRows(r){
+  var p=r.p,base=r.useArea,areas=[base,Math.min(base*3,p.maxArea),Math.min(base*10,p.maxArea)],seen={},rows=[];
+  areas.forEach(function(a){
+    var k=Math.round(a*10);if(seen[k])return;seen[k]=1;
+    var e=evalPlant(p,state,a);
+    rows.push({a:a,profit:e.profit,capex:e.capex});
+  });
+  return rows;
+}
+
+function secBody(id,r){
+  var p=r.p,h='',q=encodeURIComponent;
+  switch(id){
+  case 'grow':
+    h+='<ol class="st" style="margin-top:14px">'+p.steps.map(function(x){return '<li><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></li>';}).join('')+'</ol>';
+    if(p.tip)h+='<div class="tip">💡 '+esc(p.tip)+'</div>';
+    break;
+  case 'cal':
+    h+=calHtml(p);break;
+  case 'mist':
+    h+='<ul class="plain" style="margin-top:14px">'+p.mistakes.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>';
+    if(p.risk)h+='<div class="tip">⚠ '+esc(p.risk)+'</div>';
+    break;
+  case 'seed':
+    h+='<p>'+esc(p.seedNote)+'</p><h4>Проверьте при покупке</h4><ul class="plain"><li>Срок годности и дату фасовки на упаковке.</li><li>Название сорта и производителя — без маркировки не берите.</li><li>Всхожесть: у качественных семян она указана на упаковке.</li><li>Для продажи продукции — документы на посевной и посадочный материал.</li></ul>'+
+      '<h4>Где искать в вашем городе</h4>'+lnks([['Магазины на карте','https://yandex.ru/maps/?text='+q(mapQuery(p,'seed'))],['Яндекс Маркет','https://market.yandex.ru/search?text='+q(p.seedQ)],['Ozon','https://www.ozon.ru/search/?text='+q(p.seedQ)],['Wildberries','https://www.wildberries.ru/catalog/0/search.aspx?search='+q(p.seedQ)]])+
+      '<div class="src">🔎 <span>Мы не придумываем адреса, цены и контакты. Ссылки ведут на открытые карты и каталоги — сравнивайте предложения сами.</span></div>';
+    break;
+  case 'equip':
+    h+='<ul class="eq" style="margin-top:8px">'+p.equip.map(function(x){return '<li><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></li>';}).join('')+'</ul>'+
+      '<h4>На что смотреть</h4><ul class="plain"><li>Сравнивайте минимум 3 предложения.</li><li>Читайте отзывы с фото и видео.</li><li>Уточняйте гарантию и сервис.</li><li>Для электроприборов нужны заводской сертификат и защита от перегрева.</li></ul>'+
+      '<h4>Где искать</h4>'+lnks([['Магазины на карте','https://yandex.ru/maps/?text='+q(mapQuery(p,'equip'))],['Яндекс Маркет','https://market.yandex.ru/search?text='+q(p.eqQ)],['Ozon','https://www.ozon.ru/search/?text='+q(p.eqQ)]])+
+      '<div class="src">🔎 <span>Цены и наличие смотрите у продавцов: мы их не публикуем, чтобы не вводить вас в заблуждение.</span></div>';
+    break;
+  case 'diy':
+    h+='<ul class="plain" style="margin-top:14px">'+p.diy.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'+
+      '<div class="tip">⚡ Электрику (лампы, насосы, обогрев) подключайте только готовыми заводскими приборами через розетку с защитой. Самостоятельная проводка опасна.</div>';
+    break;
+  case 'start':
+    var split=p.split||[['Оборудование и материалы',1]],tot=0;
+    h+='<table class="t" style="margin-top:8px">';
+    split.forEach(function(x){var v=r.capex*x[1];tot+=v;h+='<tr><td>'+esc(x[0])+'</td><td>'+fmtMoney(v)+'</td></tr>';});
+    h+='<tr><td>Резерв на непредвиденное (15%)</td><td>'+fmtMoney(tot*.15)+'</td></tr><tr class="total"><td>Итого на старт</td><td>'+fmtMoney(tot*1.15)+'</td></tr></table>'+
+      '<p class="small muted">Расчёт для площади '+esc(fmtArea(r.useArea))+'. Часть оборудования можно собрать самостоятельно — вложения будут ниже. Не включены стоимость помещения или земли, техники и ваш труд.</p>';
+    break;
+  case 'cost':
+    var am=r.capex/3,full=r.opex+am,unit=r.yearKg>0?full/r.yearKg:0,margin=p.price>0?(p.price-unit)/p.price:0;
+    h+='<p>Себестоимость — сколько стоит вырастить одну единицу продукции. Продавать ниже неё — работать в убыток.</p><table class="t">'+
+      '<tr><td>Расходы в год</td><td>'+fmtMoney(r.opex)+'</td></tr>'+
+      '<tr><td>Амортизация оборудования (вложения ÷ 3 года)</td><td>'+fmtMoney(am)+'</td></tr>'+
+      '<tr><td>Затраты в год</td><td>'+fmtMoney(full)+'</td></tr>'+
+      '<tr><td>Объём в год</td><td>'+fmtQty(r.yearKg,p.unit)+'</td></tr>'+
+      '<tr class="total"><td>Себестоимость '+unitWord(p)+'</td><td>'+fmtMoney1(unit)+'</td></tr>'+
+      '<tr><td>Ориентир рыночной цены</td><td>'+fmtMoney1(p.price)+'</td></tr>'+
+      '<tr><td>Запас по цене</td><td>'+Math.round(margin*100)+'%</td></tr></table>'+
+      '<div class="tip">Формула: (расходы в год + амортизация) ÷ объём. Добавьте плату за свой труд: она не включена.</div>';
+    break;
+  case 'earn':
+    var SC=[['Осторожный',.7,.85],['Базовый',1,1],['Оптимистичный',1.15,1.1]];
+    h+='<div class="scen">';
+    SC.forEach(function(s,i){
+      var rev=r.revenue*s[1]*s[2],pr=rev-r.opex*s[1],pb=pr>0?r.capex/pr*12+p.delay*12:Infinity;
+      h+='<div class="'+(i===1?'base':'')+'"><h5>'+s[0]+'</h5><b>'+fmtMoney(pr)+'</b>в год<br><b style="margin-top:6px">'+fmtMoney(pr/12)+'</b>в месяц<br><b style="margin-top:6px">'+fmtMonths(pb)+'</b>окупаемость</div>';
+    });
+    h+='</div><p class="small muted" style="margin-top:10px">Осторожный: меньше объём и ниже цена. Оптимистичный: хороший урожай и сбыт. Это прикидка, а не гарантия дохода.</p>';
+    break;
+  case 'sell':
+    var order=(p.sell||[]).slice(),rest=Object.keys(CHANNELS).filter(function(k){return order.indexOf(k)<0;});
+    h+='<p>'+esc(p.sellNote||'')+'</p>';
+    order.forEach(function(k,i){
+      var c=CHANNELS[k];
+      h+='<div class="ch fit"><div class="h"><span>'+c.e+'</span><b>'+c.n+'</b><span class="tg">'+(i===0?'Лучше всего':'Подходит')+'</span></div><p>'+c.what+'</p><p><span class="k">Как начать:</span> '+c.how+'</p><p><span class="k">Что нужно:</span> '+c.need+'</p><p><span class="k">Совет:</span> '+c.tip+'</p></div>';
+    });
+    rest.forEach(function(k){var c=CHANNELS[k];h+='<div class="ch"><div class="h"><span>'+c.e+'</span><b>'+c.n+'</b></div><p>'+c.what+'</p></div>';});
+    h+='<div class="src">ℹ️ <span>Контакты покупателей и цены мы не публикуем: их нужно получать из проверяемых источников. Правила продажи (документы, санитарные требования, самозанятость, ИП, КФХ) зависят от региона — уточните их заранее.</span></div>';
+    break;
+  case 'buyers':
+    var tpl='Здравствуйте! Меня зовут [имя], я выращиваю '+p.name.toLowerCase()+' в '+(cityName()||'вашем городе')+'. Могу поставлять свежую продукцию регулярно, с доставкой. Готов прислать пробную партию и обсудить условия. Когда вам удобно поговорить?';
+    h+='<ol class="st" style="margin-top:14px"><li><b>Опишите продукт</b><span>Что именно, какой объём, цена и как часто вы можете поставлять.</span></li>'+
+      '<li><b>Составьте список из 15–20 потенциальных покупателей</b><span>Найдите их на картах и в соцсетях вашего города.</span></li>'+
+      '<li><b>Свяжитесь и предложите пробу</b><span>Напишите или придите с образцом, предложите небольшую пробную партию.</span></li>'+
+      '<li><b>Закрепите договорённость</b><span>Зафиксируйте объём, срок, цену и условия оплаты письменно.</span></li>'+
+      '<li><b>Просите отзывы и рекомендации</b><span>Один довольный покупатель приводит ещё двоих.</span></li></ol>'+
+      '<h4>Шаблон первого сообщения</h4><div class="tpl">'+esc(tpl)+'</div><button class="btn ghost small" data-act="copy" data-text="'+esc(tpl)+'">Скопировать текст</button>';
+    break;
+  case 'scale':
+    h+='<ul class="plain" style="margin-top:14px">'+p.scale.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>';
+    var rows=scaleRows(r);
+    h+='<h4>Что будет при росте площади</h4><table class="t"><tr><td><span class="muted small">Площадь</span></td><td><span class="muted small">Прибыль / год · вложения</span></td></tr>';
+    rows.forEach(function(x){h+='<tr><td>'+esc(fmtArea(x.a))+'</td><td>'+fmtMoney(x.profit)+' · '+fmtMoney(x.capex)+'</td></tr>';});
+    h+='</table>';
+    if(rows.length<2)h+='<p class="small muted">Для этой культуры площадь уже близка к разумному максимуму. Расти дальше лучше за счёт второй культуры.</p>';
+    else if(rows[rows.length-1].a>=p.maxArea)h+='<p class="small muted">Больше '+esc(fmtArea(p.maxArea))+' под эту культуру занимать нецелесообразно — добавляйте другие культуры.</p>';
+    h+='<p class="small muted">Расчёт ориентировочный: при росте масштаба добавляются расходы на работников, технику и сбыт.</p>';
+    break;
+  }
+  return h;
+}
+
+/* ---- экран результата ---- */
+function viewResult(){
+  var res=state.results||[];
+  var sp=byId(SPACES,state.space),gl=byId(GOALS,state.goal);
+  var h='<h1>Персональная рекомендация</h1><div class="summary"><span class="tag">'+esc(state.city.name)+'</span><span class="tag">'+sp.name+
+    '</span><span class="tag">'+esc(fmtArea(toM2(state.areaVal,state.areaUnit)))+'</span><span class="tag">'+gl.name+'</span></div>';
+  if(!res.length){
+    return h+'<p class="sub">Для таких параметров мы пока не нашли подходящих культур. Попробуйте изменить пространство или площадь.</p>'+
+      '<div class="btns"><button class="btn" data-act="edit">Изменить параметры</button></div>';
+  }
+  var t=res[0];
+  h+='<button class="top grad c-'+t.p.cat+'" data-act="open" data-id="'+t.p.id+'"><span class="lockpill">'+
+    (isUnlocked(t.p.id)?'✓ план открыт':ICO_LOCK.replace('width="18" height="18"','width="13" height="13"')+' полный план')+'</span>'+
+    '<span class="badge">Лучший выбор · '+t.match+'%</span><div class="row"><span class="big">'+t.p.emoji+'</span><div><h2>'+esc(t.p.name)+'</h2><span class="muted">'+esc(t.p.tag)+'</span></div></div>'+
+    statsHtml(t)+(t.warns.length?'<div class="warnline">⚠ '+esc(t.warns[0])+'</div>':'')+'</button>';
+
+  var counts={all:res.length};
+  CATS.forEach(function(c){counts[c.id]=0;});
+  res.forEach(function(r){counts[r.p.cat]++;});
+  function chip(id,label){return '<button class="chip'+(state.cat===id?' on':'')+'" data-act="cat" data-id="'+id+'">'+label+' · '+counts[id]+'</button>';}
+  h+='<div class="listhead"><h3>Подходящие культуры</h3></div><div class="catrow">'+chip('all','Все')+
+    CATS.filter(function(c){return counts[c.id]>0;}).map(function(c){return chip(c.id,c.emoji+' '+c.short);}).join('')+'</div>';
+
+  var list=res.filter(function(r){return (state.cat==='all'||r.p.cat===state.cat)&&!(state.cat==='all'&&r===t);});
+  var lim=state.showAll?list.length:6;
+  if(!list.length)h+='<p class="sub">В этой категории для ваших условий ничего не подходит.</p>';
+  list.slice(0,lim).forEach(function(r){
+    var st=statsFor(r)[0];
+    h+='<button class="more" data-act="open" data-id="'+r.p.id+'"><span class="thumb grad c-'+r.p.cat+'">'+r.p.emoji+'</span><span class="grow"><b>'+esc(r.p.name)+'</b><span class="s">'+
+      esc(st[0]+' · '+st[1])+(r.warns.length?' · ⚠ '+esc(r.warns[0]):'')+'</span></span><span class="pct">'+r.match+'%</span></button>';
+  });
+  if(list.length>lim)h+='<button class="btn ghost" style="width:100%;margin-bottom:10px" data-act="showall">Показать ещё '+(list.length-lim)+'</button>';
+  h+='<div class="btns"><button class="btn ghost" data-act="edit">Изменить параметры</button><button class="btn ghost" data-act="restart">Начать заново</button></div>';
+  h+='<p class="foot">Расчёты ориентировочные: цены и урожайность зависят от региона, сорта и сбыта.</p>';
+  return h;
+}
+
+/* ---- карточка растения ---- */
+function viewDetail(){
+  var r=null;
+  (state.results||[]).forEach(function(x){if(x.p.id===state.detailId)r=x;});
+  if(!r)return '';
+  var p=r.p,cat=byId(CATS,p.cat),open=isUnlocked(p.id);
+  var h='<button class="back" data-act="close-detail">← К рекомендациям</button>'+
+    '<div class="dhero grad c-'+p.cat+'">'+(PHOTOS[p.id]?'<img class="dphoto" src="'+esc(PHOTOS[p.id])+'" alt="">':'<span class="dem">'+p.emoji+'</span>')+
+    '<div class="dbody"><span class="dcat">'+esc(cat.name)+'</span><h2>'+esc(p.name)+'</h2><p>'+esc(p.tag)+'</p></div></div>'+
+    '<div class="summary"><span class="tag">'+esc(p.time)+'</span><span class="tag">Сложность: '+DIFF[p.diff].toLowerCase()+'</span><span class="tag">Совпадение '+r.match+'%</span></div>';
+
+  h+='<section class="card"><span class="freebadge">Бесплатно</span><h3>Что это за растение и для чего используется</h3><p>'+esc(p.about)+'</p><ul>'+
+    p.use.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></section>';
+
+  h+='<section class="card"><span class="freebadge">Бесплатно</span><h3>Почему это подходит вам</h3><ul>'+r.reasons.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'+
+    r.warns.map(function(w){return '<div class="warnline" style="margin-top:8px">⚠ '+esc(w)+'</div>';}).join('')+'</section>';
+
+  h+='<section class="card"><span class="freebadge">Бесплатно</span><h3>Коротко в цифрах</h3><div class="nums">'+
+    '<div><b>'+fmtMoney(r.capex*1.15)+'</b><span>на старт</span></div>'+
+    '<div><b>'+fmtMoney(r.profit)+'</b><span>'+(state.goal==='profit'?'прибыль':'выгода')+' в год</span></div>'+
+    '<div><b>'+(state.goal==='profit'?fmtMonths(r.payback):fmtQty(r.yearKg,p.unit))+'</b><span>'+(state.goal==='profit'?'окупаемость':'урожая в год')+'</span></div></div>'+
+    '<p class="small muted" style="margin:10px 0 0">Для площади '+esc(fmtArea(r.useArea))+'. '+(open?'Подробный расчёт — в разделах ниже.':'Смета по статьям, себестоимость и сценарии — в полном плане.')+'</p></section>';
+
+  h+='<div class="planhead"><h2>Полный план запуска</h2><span class="pill'+(open?' ok':'')+'">'+(open?'✓ Доступ открыт':ICO_LOCK.replace('width="18" height="18"','width="13" height="13"')+' 12 разделов')+'</span></div>'+
+    '<p class="sub" style="margin-bottom:0">Пошаговая инструкция: от выбора семян до первых продаж.</p>';
+  GROUPS.forEach(function(g){
+    h+='<div class="grp">'+g.t+'</div>';
+    g.ids.forEach(function(id){
+      var s=byId(SECS,id);
+      if(open){
+        h+='<details class="sec"><summary><span class="lre">'+s.e+'</span><span class="lrt"><b>'+s.t+'</b></span>'+ICO_CHEV+'</summary><div class="secbody">'+secBody(id,r)+'</div></details>';
+      }else{
+        h+='<button class="lockrow" data-act="paywall" data-id="'+p.id+'"><span class="lre">'+s.e+'</span><span class="lrt"><b>'+s.t+'</b><i>'+esc(s.tz(p))+'</i></span>'+ICO_LOCK+'</button>';
+      }
+    });
+  });
+
+  if(open){
+    h+='<section class="card" style="margin-top:20px"><h3>Нужна помощь с запуском?</h3>'+
+      [['Расширенный бизнес-план','С расчётами под ваш проект'],['Консультация специалиста','Разбор вашей ситуации'],['Готовый комплект для выращивания','Всё необходимое для старта']].map(function(s){
+        return '<div class="svc"><div class="grow"><b>'+s[0]+'</b><span>'+s[1]+'</span></div><button class="btn small ghost" data-act="service" data-id="'+esc(s[0])+'">'+(CONFIG.contactUrl?'Узнать':'Скоро')+'</button></div>';
+      }).join('')+'</section>';
+    if(CONFIG.demo)h+='<div style="text-align:center"><button class="textlink" data-act="demo-lock" data-id="'+p.id+'">Демо: снова закрыть доступ</button></div>';
+  }else{
+    h+='<div class="bar"><button class="btn" data-act="paywall" data-id="'+p.id+'">Открыть полный план · '+esc(CONFIG.priceOne)+'</button></div>';
+  }
+  return h+'<p class="foot">Расчёты ориентировочные: цены и урожайность зависят от региона, сорта и сбыта.</p>';
+}
+
+/* ---- окно оплаты ---- */
+function sheetHtml(p){
+  var plans=[['one','Этот план','Полный план «'+p.name+'»',CONFIG.priceOne,''],['all','Все планы','Все '+PLANTS.length+' культур, включая будущие',CONFIG.priceAll,'Выгоднее']];
+  return '<div id="sheetRoot"><div class="shback" data-act="close-sheet"></div><div class="sheet" role="dialog" aria-modal="true"><div class="handle"></div>'+
+    '<h2>Полный план запуска</h2><p class="sub">«'+esc(p.name)+'» — от выбора семян до первых продаж</p>'+
+    '<div class="inc"><div><span>🌱</span><span><b>Вырастить</b><span>инструкция, календарь, частые ошибки</span></span></div>'+
+    '<div><span>🛒</span><span><b>Запустить</b><span>где купить семена и оборудование, сборка, смета, себестоимость</span></span></div>'+
+    '<div><span>💰</span><span><b>Заработать</b><span>прибыль, куда и кому продать, поиск покупателей, масштаб</span></span></div></div>'+
+    '<div class="plans" id="plans">'+plans.map(function(x){
+      return '<button class="plan'+(x[0]==='all'?' sel':'')+'" data-act="sheet-opt" data-id="'+x[0]+'"><span><b>'+x[1]+(x[4]?'<span class="tg">'+x[4]+'</span>':'')+'</b><span class="s">'+esc(x[2])+'</span></span><span class="pr">'+esc(x[3])+'</span></button>';
+    }).join('')+'</div>'+
+    '<button class="btn" id="buyBtn" data-act="buy">Открыть за '+esc(CONFIG.priceAll)+'</button>'+
+    '<button class="textlink" style="width:100%" data-act="close-sheet">Не сейчас</button>'+
+    (CONFIG.demo?'<p class="note">Демо-режим: оплата не подключена, доступ откроется без списания денег.</p>':'')+'</div></div>';
+}
+function openSheet(id){
+  var p=byId(PLANTS,id);if(!p||document.getElementById('sheetRoot'))return;
+  state.sheet=id;state.sheetPlan='all';
+  document.getElementById('app').insertAdjacentHTML('beforeend',sheetHtml(p));
+  document.body.style.overflow='hidden';
+  haptic();
+}
+function closeSheet(){
+  var s=document.getElementById('sheetRoot');
+  if(s&&s.parentNode)s.parentNode.removeChild(s);
+  state.sheet=null;document.body.style.overflow='';
+}
+function grant(plan,plantId){
+  if(plan==='all')access.all=true;
+  else if(access.ids.indexOf(plantId)<0)access.ids.push(plantId);
+  saveAccess();closeSheet();render(false);toast('Доступ открыт');
+}
+function buy(plan,plantId){
+  if(CONFIG.invoiceEndpoint){
+    try{
+      fetch(CONFIG.invoiceEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({plan:plan,plant:plantId,initData:(tg&&tg.initData)||''})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(tg&&tg.openInvoice&&d&&d.link){tg.openInvoice(d.link,function(status){if(status==='paid')grant(plan,plantId);});}
+          else toast('Не удалось открыть оплату');
+        })
+        .catch(function(){toast('Не удалось открыть оплату');});
+    }catch(e){toast('Не удалось открыть оплату');}
+  }else if(CONFIG.demo){
+    grant(plan,plantId);
+  }else{
+    toast('Оплата пока не подключена');
+  }
+}
+function extraAct(act,id,el){
+  switch(act){
+    case 'cat':state.cat=id;state.showAll=false;render(false);break;
+    case 'showall':state.showAll=true;render(false);break;
+    case 'paywall':haptic();openSheet(id||state.detailId);break;
+    case 'close-sheet':closeSheet();break;
+    case 'sheet-opt':
+      state.sheetPlan=id;
+      var opts=document.querySelectorAll('#plans .plan');
+      for(var i=0;i<opts.length;i++)opts[i].classList.toggle('sel',opts[i].getAttribute('data-id')===id);
+      var b=document.getElementById('buyBtn');
+      if(b)b.textContent='Открыть за '+(id==='all'?CONFIG.priceAll:CONFIG.priceOne);
+      haptic();break;
+    case 'buy':buy(state.sheetPlan,state.sheet);break;
+    case 'demo-lock':
+      access.all=false;access.ids=[];saveAccess();render(false);toast('Доступ закрыт (демо)');break;
+    case 'link':openUrl(el.getAttribute('data-url'));break;
+    case 'copy':copyText(el.getAttribute('data-text')||'');break;
+    case 'service':
+      if(CONFIG.contactUrl)openUrl(CONFIG.contactUrl);else toast('Скоро будет доступно');break;
+  }
+}
+
+/* ================= Рендер ================= */
+function render(toTop){
+  var app=document.getElementById('app');
+  if(state.sheet){state.sheet=null;document.body.style.overflow='';}
+  var h;
+  if(state.detailId)h=viewDetail();
+  else switch(state.screen){
+    case 'intro':h=viewIntro();break;
+    case 'city':h=viewCity();break;
+    case 'space':h=viewSpace();break;
+    case 'area':h=viewArea();break;
+    case 'goal':h=viewGoal();break;
+    case 'analyze':h=viewAnalyze();break;
+    default:h=viewResult();
+  }
+  app.innerHTML=h;
+  if(!state.detailId){
+    if(state.screen==='city'){fillCityList();fillCityInfo();}
+    if(state.screen==='area')fillAreaHint();
+  }
+  updateBack();
+  if(toTop)window.scrollTo(0,0);
+}
+
+/* ================= Навигация ================= */
+function go(screen){state.screen=screen;render(true);}
+function back(){
+  if(state.sheet){closeSheet();return;}
+  if(state.detailId){closeDetail();return;}
+  var i=ORDER.indexOf(state.screen);
+  if(state.screen==='result'||state.screen==='analyze'){analysisRun++;state.screen='goal';}
+  else if(i>0)state.screen=ORDER[i-1];
+  render(true);
+}
+function closeDetail(){
+  state.detailId=null;
+  render(false);
+  window.scrollTo(0,state.scrollY||0);
+}
+function next(){
+  if(!canNext())return;
+  switch(state.screen){
+    case 'city':go('space');break;
+    case 'space':go('area');break;
+    case 'area':go('goal');break;
+    case 'goal':startAnalysis();break;
+  }
+}
+
+/* ================= События ================= */
+function init(){
+  var app=document.getElementById('app');
+  app.addEventListener('click',function(e){
+    var el=e.target.closest?e.target.closest('[data-act]'):null;
+    if(!el)return;
+    var act=el.getAttribute('data-act'),id=el.getAttribute('data-id');
+    switch(act){
+      case 'start':haptic();go('city');break;
+      case 'next':haptic();next();break;
+      case 'pick-city':
+        state.city=byId(CITIES,id);state.cityOther=false;save();haptic();
+        fillCityList();fillCityInfo();updateNext();break;
+      case 'other-city':
+        state.cityOther=true;
+        if(state.city&&String(state.city.id).indexOf('custom-')!==0)state.city=null;
+        haptic();fillCityList();fillCityInfo();updateNext();break;
+      case 'pick-climate':
+        state.city=customCity(id);state.cityOther=true;save();haptic();
+        fillCityList();fillCityInfo();updateNext();break;
+      case 'pick-space':state.space=id;save();haptic();render(false);break;
+      case 'pick-goal':state.goal=id;save();haptic();render(false);break;
+      case 'chip':
+        var v=parseFloat(el.getAttribute('data-m2'));
+        if(state.space==='plot'&&v>=10000){state.areaUnit='га';state.areaVal=dec(v/10000);}
+        else if(state.space==='plot'){state.areaUnit='сотки';state.areaVal=dec(v/100);}
+        else{state.areaUnit='м²';state.areaVal=String(v);}
+        save();haptic();
+        var inp=document.getElementById('areaInput'),sel=document.getElementById('areaUnit');
+        if(inp)inp.value=state.areaVal;
+        if(sel)sel.value=state.areaUnit;
+        fillAreaHint();updateNext();break;
+      case 'open':
+        state.scrollY=window.scrollY||0;state.detailId=id;state.tab='use';haptic();render(true);break;
+      case 'close-detail':closeDetail();break;
+      default:extraAct(act,id,el);break;
+      case 'tab':state.tab=id;haptic();render(false);break;
+      case 'edit':analysisRun++;go('city');break;
+      case 'restart':
+        analysisRun++;state.city=null;state.cityOther=false;state.q='';state.space=null;state.areaVal='';state.areaUnit='м²';state.goal=null;
+        state.results=null;state.detailId=null;save();go('intro');break;
+    }
+  });
+  app.addEventListener('input',function(e){
+    var t=e.target;
+    if(t.id==='citySearch'){state.q=t.value;fillCityList();}
+    else if(t.id==='areaInput'){state.areaVal=t.value;save();fillAreaHint();updateNext();}
+  });
+  app.addEventListener('change',function(e){
+    if(e.target.id==='areaUnit'){state.areaUnit=e.target.value;save();fillAreaHint();updateNext();}
+  });
+
+  try{
+    if(tg){
+      tg.ready();
+      if(tg.expand)tg.expand();
+      if(tg.disableVerticalSwipes)tg.disableVerticalSwipes();
+      if(tg.onEvent)tg.onEvent('themeChanged',applyTheme);
+      if(tg.BackButton)tg.BackButton.onClick(back);
+    }
+  }catch(err){}
+  applyTheme();
+  load();
+  loadAccess();
+  render(true);
+}
+init();
+</script>
+</body>
+</html>
